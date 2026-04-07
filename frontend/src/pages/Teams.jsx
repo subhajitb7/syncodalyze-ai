@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { Users, Plus, X, Trash2, FolderOpen, Crown, ShieldCheck, User as UserIcon } from 'lucide-react';
+import SearchBar from '../components/SearchBar';
 
 const Teams = () => {
   const [teams, setTeams] = useState([]);
@@ -57,9 +58,12 @@ const Teams = () => {
           <h1 className="text-3xl font-bold">Teams</h1>
           <p className="text-sec mt-1 font-medium">Collaborate with your team on code reviews.</p>
         </div>
-        <button onClick={() => setShowCreate(true)} className="btn-primary flex items-center gap-2">
-          <Plus className="h-5 w-5" /> New Team
-        </button>
+        <div className="flex items-center gap-3">
+          <SearchBar />
+          <button onClick={() => setShowCreate(true)} className="btn-primary flex items-center gap-2">
+            <Plus className="h-5 w-5" /> New Team
+          </button>
+        </div>
       </div>
 
       {loading ? (

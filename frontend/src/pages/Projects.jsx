@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { FolderOpen, Plus, Trash2, FileCode, X } from 'lucide-react';
+import SearchBar from '../components/SearchBar';
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
@@ -51,9 +52,12 @@ const Projects = () => {
           <h1 className="text-3xl font-bold">Projects</h1>
           <p className="text-sec mt-1 font-medium">Manage your code repositories and files.</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
-          <Plus className="h-5 w-5" /> New Project
-        </button>
+        <div className="flex items-center gap-3">
+          <SearchBar />
+          <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
+            <Plus className="h-5 w-5" /> New Project
+          </button>
+        </div>
       </div>
 
       {loading ? (

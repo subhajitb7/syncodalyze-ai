@@ -7,19 +7,16 @@ import {
 } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import NotificationBell from './NotificationBell';
-import SearchBar from './SearchBar';
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
   const { theme, toggleTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
   const location = useLocation();
-  const [moreOpen, setMoreOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const moreRef = useRef(null);
   const adminRef = useRef(null);
   const userMenuRef = useRef(null);
 
@@ -31,7 +28,6 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleOutside = (e) => {
-      if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false);
       if (adminRef.current && !adminRef.current.contains(e.target)) setAdminOpen(false);
       if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false);
     };
@@ -62,10 +58,6 @@ const Navbar = () => {
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/projects', label: 'Projects', icon: FolderOpen },
     { to: '/teams', label: 'Teams', icon: Users },
-  ];
-
-  // Secondary links go in "More" dropdown on desktop
-  const secondaryLinks = [
     { to: '/analytics', label: 'Analytics', icon: BarChart3 },
     { to: '/ai-logs', label: 'AI Logs', icon: Brain },
   ];
@@ -83,35 +75,14 @@ const Navbar = () => {
                 : 'bg-gradient-to-br from-primary-500 to-primary-600 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]'}`}>
                 <Code2 className="h-5 w-5 text-white" />
               </div>
-              {/* <span className="text-lg font-bold text-black dark:bg-clip-text dark:text-transparent dark:bg-gradient-to-r dark:from-white dark:to-gray-400 hidden sm:inline"> */}
               <span className='text-2xl font-bold'>
                 AICodeReview
               </span>
             </Link>
 
             {user && (
-              <div className="hidden md:flex items-center gap-5">
+              <div className="hidden lg:flex items-center gap-5">
                 {primaryLinks.map((l) => <NavLink key={l.to} {...l} />)}
-
-                {/* More dropdown */}
-                <div className="relative" ref={moreRef}>
-                  <button onClick={() => setMoreOpen(!moreOpen)}
-                    className={`flex items-center gap-1 text-sm font-medium transition-colors ${secondaryLinks.some((l) => isActive(l.to)) ? 'text-main' : 'text-sec hover:text-main'
-                      }`}>
-                    More <ChevronDown className={`h-3 w-3 transition-transform ${moreOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                  {moreOpen && (
-                    <div className="absolute top-full mt-3 left-0 w-48 glass-panel shadow-2xl overflow-hidden z-50">
-                      {secondaryLinks.map((l) => (
-                        <Link key={l.to} to={l.to} onClick={() => setMoreOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-3 text-sm hover:bg-sec transition-colors ${isActive(l.to) ? 'text-primary-600 bg-primary-500/5' : 'text-sec'
-                            }`}>
-                          <l.icon className="h-4 w-4" /> {l.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
 
                 {/* Admin dropdown */}
                 {isAdmin && (
@@ -157,12 +128,6 @@ const Navbar = () => {
           <div className="flex items-center gap-2 shrink-0">
             {user ? (
               <>
-                <div className="hidden lg:block">
-                  <SearchBar />
-                </div>
-                <Link to="/new-review" className="btn-primary flex items-center gap-2 text-sm whitespace-nowrap shrink-0">
-                  New Review
-                </Link>
                 <button
                   onClick={toggleTheme}
                   className="p-2 text-sec hover:text-primary-600 hover:bg-primary-500/10 rounded-lg transition-all"

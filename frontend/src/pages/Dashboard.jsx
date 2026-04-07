@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { 
-  FileCode, History, Plus, AlertCircle, CheckCircle2, 
-  BarChart3, Bug, CheckCircle, Shield, Loader2 
+import {
+  FileCode, History, Plus, AlertCircle, CheckCircle2,
+  BarChart3, Bug, CheckCircle, Shield, Loader2, Upload
 } from 'lucide-react';
+import GithubIcon from '../components/GithubIcon';
+import SearchBar from '../components/SearchBar';
 import { AuthContext } from '../context/AuthContext';
 import { useContext } from 'react';
 
@@ -50,20 +52,29 @@ const Dashboard = () => {
       .replace(/[#*_~`>]/g, '')
       .replace(/\[(.*?)\]\(.*?\)/g, '$1')
       .replace(/\s+/g, ' ');
-    
+
     return cleanText.trim().substring(0, 120) + '...';
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold ">Dashboard</h1>
-          <p className="text-sec mt-1">Overview of your code review activity.</p>
+          <p className="text-sec mt-1">Record and analyze your code reviews.</p>
         </div>
-        <Link to="/new-review" className="btn-primary flex items-center gap-2">
-          <Plus className="h-5 w-5" /> New Review
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <SearchBar />
+          <Link to="/new-review" className="btn-primary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold shadow-lg shadow-primary-500/10">
+            <Plus className="h-3.5 w-3.5" /> Paste Code
+          </Link>
+          <Link to="/new-review" className="btn-secondary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold border-col">
+            <Upload className="h-3.5 w-3.5" /> Upload File
+          </Link>
+          <Link to="/projects" className="btn-secondary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold border-col">
+            <GithubIcon className="h-3.5 w-3.5" /> Repository
+          </Link>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -98,23 +109,7 @@ const Dashboard = () => {
       </div>
 
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 gap-6 mb-8">
-        <div className="glass-panel p-6 flex items-center justify-between border-primary-500/20 shadow-lg">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 bg-primary-500/10 rounded-xl flex items-center justify-center">
-              <Plus className="h-6 w-6 text-primary-600" />
-            </div>
-            <div>
-              <h3 className="font-bold text-main">Quick Review</h3>
-              <p className="text-sm text-sec mt-1 font-medium">Submit a code snippet for instant AI analysis.</p>
-            </div>
-          </div>
-          <Link to="/new-review" className="btn-primary">
-            Start Now
-          </Link>
-        </div>
-      </div>
+
 
       {/* Reviews Section */}
       <div className="glass-panel p-6">

@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  authUser, registerUser, logoutUser, getUserProfile,
+  authUser, registerUser, logoutUser, getUserProfile, updateUserProfile,
   verifyOtp, resendOtp, forgotPassword, resetPassword,
   verify2fa
 } from '../controllers/auth.controller.js';
