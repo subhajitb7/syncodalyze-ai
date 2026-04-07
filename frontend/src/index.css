@@ -1,0 +1,184 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-dark-900: #0f1117;
+  --color-dark-800: #1a1d24;
+  --color-dark-700: #272a35;
+  --color-dark-600: #3f4352;
+  --color-dark-500: #596175;
+}
+
+@layer base {
+  body {
+    @apply bg-dark-900 text-white font-sans antialiased p-0 m-0;
+  }
+
+  ::selection {
+    @apply bg-primary-500 text-white;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-dark-800/80 backdrop-blur-md border border-dark-700 rounded-xl shadow-2xl;
+  }
+
+  .glass-input {
+    @apply bg-dark-900/50 border border-dark-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-primary-500 transition-colors;
+  }
+
+  .glass-input::placeholder {
+    color: #9ca3af;
+  }
+
+  .btn-secondary {
+    @apply bg-dark-700 text-white font-medium py-2 px-4 rounded-lg border border-dark-600 shadow-sm transition-all;
+  }
+  .btn-secondary:hover {
+    @apply bg-dark-600;
+  }
+}
+
+/* btn-primary - written as plain CSS to avoid @apply issues with hover gradient stops */
+.btn-primary {
+  background: linear-gradient(to right, var(--color-primary-600), var(--color-primary-500));
+  color: #fff;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px oklch(from var(--color-primary-500) l c h / 0.3);
+  transition: all 0.2s ease;
+}
+.btn-primary:hover {
+  background: linear-gradient(to right, var(--color-primary-500), var(--color-primary-400));
+  transform: translateY(-2px);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Custom Webkit scrollbar for dark mode */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-dark-600);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-dark-500);
+}
+
+/* AI Feedback rendered markdown styles */
+.ai-feedback-content {
+  color: #d1d5db;
+  font-size: 0.875rem;
+  line-height: 1.75;
+}
+.ai-feedback-content h1,
+.ai-feedback-content h2,
+.ai-feedback-content h3,
+.ai-feedback-content h4 {
+  color: #f3f4f6;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+.ai-feedback-content h1 { font-size: 1.5rem; }
+.ai-feedback-content h2 { font-size: 1.25rem; }
+.ai-feedback-content h3 { font-size: 1.1rem; }
+.ai-feedback-content h4 { font-size: 1rem; color: #60a5fa; }
+.ai-feedback-content p {
+  margin-bottom: 0.75rem;
+}
+.ai-feedback-content strong {
+  color: #f9fafb;
+  font-weight: 600;
+}
+.ai-feedback-content code {
+  background: var(--color-dark-900);
+  border: 1px solid var(--color-dark-700);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+  color: #f472b6;
+  font-family: ui-monospace, monospace;
+}
+.ai-feedback-content pre {
+  background: var(--color-dark-900);
+  border: 1px solid var(--color-dark-700);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+.ai-feedback-content pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #e5e7eb;
+  font-size: 0.8rem;
+}
+.ai-feedback-content ul,
+.ai-feedback-content ol {
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+.ai-feedback-content ul { list-style-type: disc; }
+.ai-feedback-content ol { list-style-type: decimal; }
+.ai-feedback-content li {
+  margin-bottom: 0.35rem;
+}
+.ai-feedback-content blockquote {
+  border-left: 3px solid var(--color-primary-500);
+  padding-left: 1rem;
+  color: #9ca3af;
+  margin: 1rem 0;
+  font-style: italic;
+}
+.ai-feedback-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+.ai-feedback-content th,
+.ai-feedback-content td {
+  border: 1px solid var(--color-dark-600);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+.ai-feedback-content th {
+  background: var(--color-dark-800);
+  color: #f3f4f6;
+  font-weight: 600;
+}
+.ai-feedback-content hr {
+  border-color: var(--color-dark-600);
+  margin: 1.5rem 0;
+}
+
+/* Monaco Editor black background override */
+.monaco-editor,
+.monaco-editor-background,
+.monaco-editor .inputarea.ime-input,
+.monaco-editor .margin,
+.monaco-editor .sticky-widget,
+.monaco-editor-sticky-scroll {
+  background: #000000 !important;
+}
+
+/* React Syntax Highlighter Background Override */
+pre[class*="language-"] {
+  background: #000000 !important;
+}
