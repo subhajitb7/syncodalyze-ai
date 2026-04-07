@@ -1,11 +1,13 @@
 import { useState, useEffect, useContext } from 'react';
 import { ThemeContext } from '../context/ThemeContext';
+import { AuthContext } from '../context/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { Users, FileText, Trash2, Shield, ShieldOff, BarChart3, Bug, FolderOpen, MessageSquare } from 'lucide-react';
 
 const AdminPanel = () => {
   const { theme } = useContext(ThemeContext);
+  const { user: currentUser } = useContext(AuthContext);
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'stats';
   const [tab, setTab] = useState(initialTab);
@@ -140,8 +142,11 @@ const AdminPanel = () => {
                   {stats.recentUsers.map((u) => (
                     <div key={u._id} className="flex items-center justify-between p-3 bg-sec/50 border border-col rounded-lg">
                       <div>
-                        <span className="font-medium">{u.name}</span>
-                        <span className="text-sec text-sm ml-2">{u.email}</span>
+                        <span className="font-medium text-main">{u.name}</span>
+                        {currentUser?._id === u._id && (
+                          <span className="ml-1.5 px-1.5 py-0.5 text-[9px] font-bold bg-primary-500/10 text-primary-500 rounded uppercase border border-primary-500/20">You</span>
+                        )}
+                        <p className="text-sec text-xs">{u.email}</p>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded ${u.role === 'admin' ? 'bg-primary-500/20 text-primary-500' : 'bg-ter text-sec'}`}>{u.role}</span>
                     </div>
@@ -168,9 +173,14 @@ const AdminPanel = () => {
                   </thead>
                   <tbody>
                     {users.map((u) => (
-                      <tr key={u._id} className="border-b border-col/50 hover:bg-sec/50">
-                        <td className="p-4 font-medium">{u.name}</td>
-                        <td className="p-4 text-sec">{u.email}</td>
+                      <tr key={u._id} className={`border-b border-col/50 hover:bg-sec/50 transition-colors ${currentUser?._id === u._id ? 'bg-primary-500/[0.03]' : ''}`}>
+                        <td className="p-4 font-bold flex items-center gap-2">
+                          {u.name}
+                          {currentUser?._id === u._id && (
+                            <span className="px-1.5 py-0.5 text-[9px] font-bold bg-primary-500/10 text-primary-500 rounded uppercase border border-primary-500/20">You</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-sec font-medium">{u.email}</td>
                         <td className="p-4">
                           <span className={`text-xs px-2 py-1 rounded ${u.role === 'admin' ? 'bg-primary-500/20 text-primary-500' : 'bg-ter text-sec'}`}>{u.role}</span>
                         </td>

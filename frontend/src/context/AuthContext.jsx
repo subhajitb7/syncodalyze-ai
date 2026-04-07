@@ -68,17 +68,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const toggleTwoFactor = async () => {
-    try {
-      const { data } = await axios.post('/api/auth/toggle-2fa');
-      const newUser = { ...user, is2faEnabled: data.is2faEnabled };
-      setUser(newUser);
-      localStorage.setItem('userInfo', JSON.stringify(newUser));
-      return { success: true, is2faEnabled: data.is2faEnabled };
-    } catch (error) {
-      return { success: false, message: error.response?.data?.message || 'Failed to toggle 2FA' };
-    }
-  };
+
 
   const register = async (name, email, password) => {
     try {
@@ -108,7 +98,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, register, logout, toggleTwoFactor, loading, socket }}>
+    <AuthContext.Provider value={{ user, setUser, login, register, logout, loading, socket }}>
       {children}
     </AuthContext.Provider>
   );

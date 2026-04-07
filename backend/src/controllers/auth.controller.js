@@ -30,19 +30,18 @@ export const authUser = async (req, res) => {
       });
     }
 
-    if (user.is2faEnabled) {
-      const otp = generateOtp();
-      user.otp = otp;
-      user.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-      await user.save();
-      await sendOtpEmail(user.email, otp);
+    // Always require 2FA after password check
+    const otp = generateOtp();
+    user.otp = otp;
+    user.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    await user.save();
+    await sendOtpEmail(user.email, otp);
 
-      return res.status(202).json({
-        message: 'Two-factor authentication required',
-        requires2fa: true,
-        email: user.email,
-      });
-    }
+    return res.status(202).json({
+      message: 'Two-factor authentication required',
+      requires2fa: true,
+      email: user.email,
+    });
 
     generateToken(res, user._id);
     res.json({
@@ -271,16 +270,4 @@ export const verify2fa = async (req, res) => {
   }
 };
 
-// @desc    Toggle 2FA for logged in user
-// @route   POST /api/auth/toggle-2fa
-export const toggle2fa = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id);
-    user.is2faEnabled = !user.is2faEnabled;
-    await user.save();
-    res.json({ is2faEnabled: user.is2faEnabled });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error toggling 2FA' });
-  }
-};
+

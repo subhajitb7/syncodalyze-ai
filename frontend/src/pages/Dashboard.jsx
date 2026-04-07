@@ -9,11 +9,10 @@ import { AuthContext } from '../context/AuthContext';
 import { useContext } from 'react';
 
 const Dashboard = () => {
-  const { user, toggleTwoFactor } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [reviews, setReviews] = useState([]);
   const [stats, setStats] = useState({ totalReviews: 0, totalBugs: 0, cleanPercent: 100 });
   const [loading, setLoading] = useState(true);
-  const [toggling2fa, setToggling2fa] = useState(false);
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
@@ -34,11 +33,7 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  const handleToggle2fa = async () => {
-    setToggling2fa(true);
-    await toggleTwoFactor();
-    setToggling2fa(false);
-  };
+
 
   const filteredReviews = reviews.filter((r) => {
     if (filter === 'bugs') return r.bugsFound > 0;
@@ -102,36 +97,9 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Security & Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="glass-panel p-6 flex items-center justify-between border-primary-500/10 shadow-lg">
-          <div className="flex items-center gap-4">
-            <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${user?.is2faEnabled ? 'bg-emerald-500/20' : 'bg-amber-500/10'}`}>
-              <Shield className={`h-6 w-6 ${user?.is2faEnabled ? 'text-emerald-600' : 'text-amber-600'}`} />
-            </div>
-            <div>
-              <h3 className="font-bold text-main">Two-Factor Authentication</h3>
-              <p className="text-sm text-sec mt-1 font-medium">
-                {user?.is2faEnabled 
-                  ? 'Your account is secured with 2FA.' 
-                  : 'Add an extra layer of security to your account.'}
-              </p>
-            </div>
-          </div>
-          <button 
-            onClick={handleToggle2fa} 
-            disabled={toggling2fa}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
-              user?.is2faEnabled 
-                ? 'bg-red-500/10 text-red-600 border border-red-500/30 hover:bg-red-500/20' 
-                : 'btn-secondary border-amber-500/30 text-amber-600 hover:bg-amber-500/10'
-            }`}
-          >
-            {toggling2fa ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            {user?.is2faEnabled ? 'Disable 2FA' : 'Enable 2FA'}
-          </button>
-        </div>
 
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 gap-6 mb-8">
         <div className="glass-panel p-6 flex items-center justify-between border-primary-500/20 shadow-lg">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 bg-primary-500/10 rounded-xl flex items-center justify-center">
