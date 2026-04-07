@@ -4,9 +4,13 @@ import {
   verifyOtp, resendOtp, forgotPassword, resetPassword,
   verify2fa, toggle2fa
 } from '../controllers/auth.controller.js';
+import { gitHubRedirect, gitHubCallback } from '../controllers/githubAuth.controller.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+router.get('/github', gitHubRedirect);
+router.get('/github/callback', gitHubCallback);
 
 router.post('/register', registerUser);
 router.post('/login', authUser);

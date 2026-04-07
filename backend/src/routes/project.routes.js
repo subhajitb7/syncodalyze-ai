@@ -7,6 +7,7 @@ import {
   getProjectFiles,
   deleteProject,
   syncProjectFromRepo,
+  deleteFile
 } from '../controllers/project.controller.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -19,5 +20,6 @@ router.delete('/:id', protect, deleteProject);
 router.post('/:id/repo-sync', protect, syncProjectFromRepo);
 router.post('/:id/files', protect, uploadFile);
 router.get('/:id/files', protect, getProjectFiles);
+router.delete('/:id/files/:fileId', protect, deleteFile);
 
 export default router;

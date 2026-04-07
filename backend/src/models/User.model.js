@@ -14,7 +14,15 @@ const userSchema = mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function() { return !this.githubId; }, // Only required if not OAuth
+    },
+    githubId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    githubAccessToken: {
+      type: String,
     },
     role: {
       type: String,
@@ -47,7 +55,7 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
-    next();
+    return next();
   }
 
   const salt = await bcrypt.genSalt(10);

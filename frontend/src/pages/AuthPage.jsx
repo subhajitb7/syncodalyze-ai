@@ -1,6 +1,8 @@
 import { useState, useContext } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { Mail, Lock, User } from 'lucide-react'; 
+import GithubIcon from '../components/GithubIcon';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -90,6 +92,19 @@ const AuthPage = () => {
             {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Sign Up'}
           </button>
         </form>
+
+        <div className="relative my-8 text-center">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-col"></div></div>
+          <span className="relative px-4 text-xs font-bold text-sec uppercase bg-sec tracking-widest rounded-full border border-col">OR</span>
+        </div>
+
+        <a 
+          href="http://localhost:5001/api/auth/github" 
+          className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-col bg-ter hover:bg-sec hover:border-text-main transition-all font-bold text-main group shadow-sm"
+        >
+          <GithubIcon className="h-5 w-5 group-hover:scale-110 transition-transform" />
+          <span>Continue with GitHub</span>
+        </a>
 
         <div className="mt-6 text-center text-sm text-sec font-medium">
           {isLogin ? "Don't have an account?" : 'Already have an account?'}

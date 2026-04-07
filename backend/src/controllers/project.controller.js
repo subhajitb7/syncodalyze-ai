@@ -2,6 +2,8 @@ import Project from '../models/Project.model.js';
 import CodeFile from '../models/CodeFile.model.js';
 import Notification from '../models/Notification.model.js';
 import Team from '../models/Team.model.js';
+import User from '../models/User.model.js';
+import axios from 'axios';
 import { getProjectAccess } from '../utils/projectUtils.js';
 
 // @desc    Create a new project
@@ -204,42 +206,139 @@ export const syncProjectFromRepo = async (req, res) => {
     }
 
     const project = access.project;
+    const user = await User.findById(req.user._id);
+    const githubToken = user?.githubAccessToken;
+
     let provider = 'other';
     let apiUrl = '';
 
     if (repoUrl.includes('github.com')) {
       provider = 'github';
-      // Convert https://github.com/owner/repo to https://api.github.com/repos/owner/repo
       const parts = repoUrl.split('github.com/')[1].split('/');
-      apiUrl = `https://api.github.com/repos/${parts[0]}/${parts[1]}`;
+      const owner = parts[0];
+      const repo = parts[1].replace('.git', '');
+      apiUrl = `https://api.github.com/repos/${owner}/${repo}`;
+      
+      console.log(`Starting sync for ${owner}/${repo}...`);
+      
+      try {
+        const headers = githubToken ? { Authorization: `token ${githubToken}` } : {};
+
+        // 1. Get default branch
+        const repoRes = await axios.get(apiUrl, { headers });
+        const defaultBranch = repoRes.data.default_branch;
+        console.log(`Found default branch: ${defaultBranch}`);
+
+        // 2. Get recursive tree
+        const treeRes = await axios.get(`${apiUrl}/git/trees/${defaultBranch}?recursive=1`, { headers });
+        console.log(`Fetched tree with ${treeRes.data.tree.length} items`);
+
+        const files = treeRes.data.tree.filter(item => 
+          item.type === 'blob' && 
+          /\.(js|jsx|ts|tsx|py|java|cpp|c|h|cs|go|rb|php|rs|md|html|css|json)$/i.test(item.path) &&
+          !item.path.includes('node_modules') &&
+          !item.path.includes('vendor') &&
+          !item.path.includes('.git')
+        );
+
+        console.log(`Filtered to ${files.length} code files. syncing top 30...`);
+
+        // 3. Fetch each file content and save
+        const syncLimit = 30;
+        const filesToSync = files.slice(0, syncLimit);
+
+        for (const file of filesToSync) {
+          try {
+            const blobRes = await axios.get(file.url, { headers });
+            const content = Buffer.from(blobRes.data.content, 'base64').toString('utf8');
+
+            const existingFile = await CodeFile.findOne({ project: project._id, filename: file.path });
+            if (existingFile) {
+              if (existingFile.content !== content) {
+                existingFile.content = content;
+                existingFile.currentVersion += 1;
+                existingFile.versions.push({ versionNumber: existingFile.currentVersion, content });
+                await existingFile.save();
+              }
+            } else {
+              await CodeFile.create({
+                project: project._id,
+                filename: file.path,
+                content,
+                language: file.path.split('.').pop() || project.language,
+                currentVersion: 1,
+                versions: [{ versionNumber: 1, content }]
+              });
+            }
+          } catch (fileErr) {
+            console.error(`Failed to sync file ${file.path}:`, fileErr.message);
+          }
+        }
+        
+        project.description = repoRes.data.description || project.description;
+        console.log('Project sync completed successfully.');
+      } catch (syncErr) {
+        console.error('GitHub API Sync failed:', syncErr.response?.data || syncErr.message);
+        // Fallback to meta sync via fetch if axios fails
+        const response = await fetch(apiUrl);
+        if (response.ok) {
+          const repoData = await response.json();
+          project.description = repoData.description || project.description;
+        }
+      }
+      
+      project.repoUrl = repoUrl;
+      project.repoProvider = provider;
+      await project.save();
     } else if (repoUrl.includes('gitlab.com')) {
       provider = 'gitlab';
-      // GitLab API for project info
       const path = repoUrl.split('gitlab.com/')[1].replace(/\//g, '%2F');
       apiUrl = `https://gitlab.com/api/v4/projects/${path}`;
-    }
-
-    if (apiUrl) {
+      
       const response = await fetch(apiUrl);
       if (response.ok) {
         const repoData = await response.json();
         project.repoUrl = repoUrl;
         project.repoProvider = provider;
-        // Optionally update description if empty
-        if (!project.description && (repoData.description || repoData.name)) {
-          project.description = repoData.description || repoData.name;
+        if (!project.description && repoData.description) {
+          project.description = repoData.description;
         }
         await project.save();
       }
-    } else {
-      project.repoUrl = repoUrl;
-      project.repoProvider = provider;
-      await project.save();
     }
 
     res.json(project);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error during sync' });
+  }
+};
+
+// @desc    Delete a file from project
+// @route   DELETE /api/projects/:id/files/:fileId
+// @access  Private
+export const deleteFile = async (req, res) => {
+  try {
+    const { id, fileId } = req.params;
+    const access = await getProjectAccess(id, req.user._id);
+
+    if (!access.exists) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    if (access.project.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Only the project owner can delete files' });
+    }
+
+    const file = await CodeFile.findOne({ _id: fileId, project: id });
+    if (!file) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    await CodeFile.findByIdAndDelete(fileId);
+    res.json({ message: 'File deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error deleting file' });
   }
 };

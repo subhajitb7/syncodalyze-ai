@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import hljs from 'highlight.js';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FileCode, Plus, FolderOpen, ArrowLeft, X, Upload, Trash2 } from 'lucide-react';
+import { FileCode, Plus, FolderOpen, ArrowLeft, X, Upload, Trash2, RefreshCw, Settings } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { ThemeContext } from '../context/ThemeContext';
 const ProjectDetail = () => {
@@ -11,6 +11,7 @@ const ProjectDetail = () => {
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [fileForm, setFileForm] = useState({ filename: '', content: '', language: 'javascript' });
 
@@ -62,6 +63,20 @@ const ProjectDetail = () => {
       console.error(err);
     }
   };
+
+  const handleSync = async () => {
+    if (!project.repoUrl) return;
+    setSyncing(true);
+    try {
+      await axios.post(`/api/projects/${id}/repo-sync`, { repoUrl: project.repoUrl });
+      await fetchProject();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || 'Sync failed');
+    } finally {
+      setSyncing(false);
+    }
+  };
   
   const handleDeleteProject = async () => {
     if (!confirm('Are you sure you want to delete this project? This will permanently remove all files and results.')) return;
@@ -70,6 +85,18 @@ const ProjectDetail = () => {
       navigate('/projects');
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete project');
+    }
+  };
+
+  const handleDeleteFile = async (e, fileId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to delete this file?')) return;
+    try {
+      await axios.delete(`/api/projects/${id}/files/${fileId}`);
+      fetchProject();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete file');
     }
   };
 
@@ -127,12 +154,23 @@ const ProjectDetail = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {project.repoUrl && (
+            <button 
+              onClick={handleSync} 
+              disabled={syncing}
+              className={`btn-secondary flex items-center gap-2 font-bold ${syncing ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title="Pull latest files from repository"
+            >
+              <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Syncing...' : 'Sync Repo'}
+            </button>
+          )}
           {project.canDelete && (
             <button onClick={handleDeleteProject} className="btn-secondary border-red-500/30 text-red-600 hover:bg-red-500/10 flex items-center gap-2 font-bold">
               <Trash2 className="h-4 w-4" /> Delete Project
             </button>
           )}
-          <button onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2">
+          <button onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2 font-bold ring-1 ring-primary-500/50">
             <Plus className="h-5 w-5" /> Add File
           </button>
         </div>
@@ -162,7 +200,19 @@ const ProjectDetail = () => {
                     <p className="text-xs text-sec font-medium">v{file.currentVersion} · <span className="uppercase">{file.language}</span></p>
                   </div>
                 </div>
-                <span className="text-xs text-sec font-medium">{new Date(file.createdAt).toLocaleDateString()}</span>
+                <div className="flex items-center gap-4">
+                  <span className="text-xs text-sec font-medium">{new Date(file.createdAt).toLocaleDateString()}</span>
+                  
+                  {project.canDelete && (
+                    <button 
+                      onClick={(e) => handleDeleteFile(e, file._id)}
+                      className="p-2 text-sec hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                      title="Delete file"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               </Link>
             ))}
           </div>

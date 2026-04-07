@@ -10,6 +10,12 @@ const AdminPanel = () => {
   const initialTab = searchParams.get('tab') || 'stats';
   const [tab, setTab] = useState(initialTab);
   const [stats, setStats] = useState(null);
+
+  // Sync tab state with URL search params
+  useEffect(() => {
+    const currentTab = searchParams.get('tab') || 'stats';
+    setTab(currentTab);
+  }, [searchParams]);
   const [users, setUsers] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
