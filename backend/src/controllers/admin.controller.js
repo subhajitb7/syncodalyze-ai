@@ -57,6 +57,9 @@ export const updateUserRole = async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
+    if (user.id === req.user.id) {
+      return res.status(400).json({ message: 'Cannot update your own role' });
+    }
     user.role = role;
     await user.save();
 

@@ -71,6 +71,15 @@ const AdminPanel = () => {
     { key: 'reviews', label: 'Reviews', icon: FileText },
   ];
 
+  const colorClasses = {
+    primary: { bg: 'bg-primary-500/10', text: 'text-primary-400' },
+    emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
+    purple: { bg: 'bg-purple-500/10', text: 'text-purple-400' },
+    yellow: { bg: 'bg-yellow-500/10', text: 'text-yellow-400' },
+    red: { bg: 'bg-red-500/10', text: 'text-red-400' },
+    cyan: { bg: 'bg-cyan-500/10', text: 'text-cyan-400' },
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
       <div className="mb-8">
@@ -107,8 +116,8 @@ const AdminPanel = () => {
                   { label: 'Total Comments', value: stats.totalComments, icon: MessageSquare, color: 'cyan' },
                 ].map((s, i) => (
                   <div key={i} className="glass-panel p-5 flex items-center gap-4">
-                    <div className={`h-12 w-12 bg-${s.color}-500/10 rounded-xl flex items-center justify-center`}>
-                      <s.icon className={`h-6 w-6 text-${s.color}-400`} />
+                    <div className={`h-12 w-12 ${colorClasses[s.color]?.bg || 'bg-gray-500/10'} rounded-xl flex items-center justify-center`}>
+                      <s.icon className={`h-6 w-6 ${colorClasses[s.color]?.text || 'text-gray-400'}`} />
                     </div>
                     <div>
                       <p className="text-sm text-gray-400">{s.label}</p>
@@ -121,7 +130,7 @@ const AdminPanel = () => {
                 <h3 className="font-semibold mb-4">Recent Users</h3>
                 <div className="space-y-2">
                   {stats.recentUsers.map((u) => (
-                    <div key={u._id} className="flex items-center justify-between p-3 bg-dark-900/50 border border-dark-600 rounded-lg">
+                    <div key={u._id} className="flex items-center justify-between p-3 bg-black/50 border border-dark-600 rounded-lg">
                       <div>
                         <span className="font-medium">{u.name}</span>
                         <span className="text-gray-500 text-sm ml-2">{u.email}</span>

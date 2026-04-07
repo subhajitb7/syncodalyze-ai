@@ -27,7 +27,6 @@ export const analyzeCode = async (req, res) => {
     };
 
     sendProgress('Analyzing code structure...');
-    await new Promise(r => setTimeout(r, 800));
 
     const prompt = `Please review the following ${language || 'code'} snippet:\n\n\`\`\`${language || ''}\n${codeSnippet}\n\`\`\``;
     const startTime = Date.now();
@@ -211,5 +210,57 @@ export const updateReviewStatus = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+/**
+ * @desc    Chat with AI for coding help
+ * @route   POST /api/reviews/chat
+ */
+export const chatWithAi = async (req, res) => {
+  const { messages } = req.body;
+
+  if (!messages || !Array.isArray(messages)) {
+    return res.status(400).json({ message: 'Messages are required' });
+  }
+
+  try {
+    const groqApiKey = process.env.GROQ_API_KEY;
+    if (!groqApiKey) {
+      return res.status(500).json({ message: 'Groq API Key is not configured' });
+    }
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${groqApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert coding assistant. Help the user with their code, provide snippets if needed, and be concise and helpful. Format your responses in Markdown.',
+          },
+          ...messages,
+        ],
+        temperature: 0.7,
+        max_tokens: 1024,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      return res.status(500).json({ message: 'AI Chat Error: ' + errorData });
+    }
+
+    const data = await response.json();
+    const reply = data.choices[0]?.message?.content || 'No response generated.';
+    
+    res.json({ reply });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error during AI chat' });
   }
 };

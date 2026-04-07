@@ -1,6 +1,7 @@
 import CodeFile from '../models/CodeFile.model.js';
 import Notification from '../models/Notification.model.js';
 import Project from '../models/Project.model.js';
+import { getProjectAccess } from '../utils/projectUtils.js';
 
 // @desc    Update file content (new version)
 // @route   PUT /api/files/:id
@@ -18,6 +19,12 @@ export const updateFileContent = async (req, res) => {
       return res.status(404).json({ message: 'File not found' });
     }
 
+    // Check project permissions
+    const access = await getProjectAccess(file.project, req.user._id);
+    if (!access.exists || !access.canEdit) {
+      return res.status(403).json({ message: 'Not authorized to edit this file' });
+    }
+
     const newVersion = file.currentVersion + 1;
     file.content = content;
     file.currentVersion = newVersion;
@@ -25,14 +32,13 @@ export const updateFileContent = async (req, res) => {
 
     await file.save();
 
-    // Create notification
-    const project = await Project.findById(file.project);
-    if (project) {
+    // Create notification for project owner if updated by someone else
+    if (access.project.owner.toString() !== req.user._id.toString()) {
       await Notification.create({
-        user: project.owner,
+        user: access.project.owner,
         type: 'file_updated',
-        message: `File "${file.filename}" updated to version ${newVersion}.`,
-        link: `/projects/${project._id}/files/${file._id}`,
+        message: `Member ${req.user.name} updated "${file.filename}" to v${newVersion}.`,
+        link: `/projects/${access.project._id}/files/${file._id}`,
       });
     }
 

@@ -12,6 +12,7 @@ const VerifyOtp = () => {
   const location = useLocation();
 
   const email = location.state?.email;
+  const type = location.state?.type; // '2fa' or undefined (registration)
 
   useEffect(() => {
     if (!email) navigate('/auth');
@@ -55,7 +56,8 @@ const VerifyOtp = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await axios.post('/api/auth/verify-otp', { email, otp: otpString });
+      const endpoint = type === '2fa' ? '/api/auth/verify-2fa' : '/api/auth/verify-otp';
+      const { data } = await axios.post(endpoint, { email, otp: otpString });
       localStorage.setItem('userInfo', JSON.stringify(data));
       window.location.href = '/dashboard'; // Full reload to pick up auth state
     } catch (err) {
@@ -79,9 +81,13 @@ const VerifyOtp = () => {
     <div className="flex-1 flex items-center justify-center p-6 relative">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary-600/10 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="glass-panel w-full max-w-md p-8 z-10">
-        <h2 className="text-3xl font-bold text-center mb-2">Verify Your Email</h2>
+        <h2 className="text-3xl font-bold text-center mb-2">
+          {type === '2fa' ? 'Second Factor Auth' : 'Verify Your Email'}
+        </h2>
         <p className="text-gray-400 text-center mb-8">
-          We sent a 6-digit code to <span className="text-primary-400 font-medium">{email}</span>
+          {type === '2fa' 
+            ? 'Enter the security code to access your account' 
+            : `We sent a 6-digit code to ${email}`}
         </p>
 
         {error && (

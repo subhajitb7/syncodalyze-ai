@@ -35,6 +35,8 @@ const AuthPage = () => {
       navigate('/dashboard');
     } else if (result.needsVerification) {
       navigate('/verify-otp', { state: { email: result.email || email } });
+    } else if (result.requires2fa) {
+      navigate('/verify-otp', { state: { email: result.email || email, type: '2fa' } });
     } else {
       setError(result.message);
     }

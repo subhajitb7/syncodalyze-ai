@@ -1,22 +1,30 @@
 import Project from '../models/Project.model.js';
 import CodeFile from '../models/CodeFile.model.js';
 import Notification from '../models/Notification.model.js';
+import Team from '../models/Team.model.js';
+import { getProjectAccess } from '../utils/projectUtils.js';
 
 // @desc    Create a new project
 // @route   POST /api/projects
 // @access  Private
 export const createProject = async (req, res) => {
   try {
-    const { name, description, language } = req.body;
+    const { name, description, language, repoUrl } = req.body;
 
     if (!name) {
       return res.status(400).json({ message: 'Project name is required' });
     }
 
+    let repoProvider = 'other';
+    if (repoUrl?.includes('github.com')) repoProvider = 'github';
+    else if (repoUrl?.includes('gitlab.com')) repoProvider = 'gitlab';
+
     const project = await Project.create({
       name,
       description,
       language,
+      repoUrl: repoUrl || '',
+      repoProvider,
       owner: req.user._id,
     });
 
@@ -39,7 +47,22 @@ export const createProject = async (req, res) => {
 // @access  Private
 export const getUserProjects = async (req, res) => {
   try {
-    const projects = await Project.find({ owner: req.user._id }).sort({ createdAt: -1 });
+    const userId = req.user._id;
+
+    // Get personal projects OR projects linked to my teams
+    const myTeams = await Team.find({ 'members.user': userId }).select('_id');
+    const teamIds = myTeams.map(t => t._id);
+
+    // Find teams that have any projects linked
+    const linkedTeams = await Team.find({ _id: { $in: teamIds } }).select('projects');
+    const linkedProjectIds = linkedTeams.reduce((acc, t) => [...acc, ...t.projects], []);
+
+    const projects = await Project.find({
+      $or: [
+        { owner: userId },
+        { _id: { $in: linkedProjectIds } }
+      ]
+    }).sort({ createdAt: -1 });
 
     // Add file count for each project
     const projectsWithCounts = await Promise.all(
@@ -61,18 +84,21 @@ export const getUserProjects = async (req, res) => {
 // @access  Private
 export const getProjectById = async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id);
+    const access = await getProjectAccess(req.params.id, req.user._id);
 
-    if (!project) {
+    if (!access.exists) {
       return res.status(404).json({ message: 'Project not found' });
     }
 
-    if (project.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized' });
+    if (!access.canEdit && !access.canDelete) {
+      // Potentially they might have "read only" access if they are just a member
+      // but if access.exists is true and they are not an owner/team-member, then 403
+      // Here, getProjectAccess returns exists:true only if they have some access context
+      return res.status(403).json({ message: 'Not authorized to view this project' });
     }
 
-    const files = await CodeFile.find({ project: project._id }).select('-content -versions').sort({ createdAt: -1 });
-    res.json({ ...project.toObject(), files });
+    const files = await CodeFile.find({ project: access.project._id }).select('-content -versions').sort({ createdAt: -1 });
+    res.json({ ...access.project.toObject(), files, canDelete: access.canDelete });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -90,14 +116,16 @@ export const uploadFile = async (req, res) => {
       return res.status(400).json({ message: 'Filename and content are required' });
     }
 
-    const project = await Project.findById(req.params.id);
-    if (!project) {
+    const access = await getProjectAccess(req.params.id, req.user._id);
+    if (!access.exists) {
       return res.status(404).json({ message: 'Project not found' });
     }
 
-    if (project.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized' });
+    if (!access.canEdit) {
+      return res.status(403).json({ message: 'Not authorized to upload files to this project' });
     }
+
+    const project = access.project;
 
     const codeFile = await CodeFile.create({
       project: project._id,
@@ -138,13 +166,16 @@ export const getProjectFiles = async (req, res) => {
 // @access  Private
 export const deleteProject = async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id);
-    if (!project) {
+    const access = await getProjectAccess(req.params.id, req.user._id);
+    if (!access.exists) {
       return res.status(404).json({ message: 'Project not found' });
     }
-    if (project.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized' });
+
+    if (!access.canDelete) {
+      return res.status(403).json({ message: 'Not authorized to delete this project. Requires Owner or Team Admin permission.' });
     }
+
+    const project = access.project;
 
     await CodeFile.deleteMany({ project: project._id });
     await Project.findByIdAndDelete(req.params.id);
@@ -153,5 +184,62 @@ export const deleteProject = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Sync project from GitHub/GitLab
+// @route   POST /api/projects/:id/repo-sync
+// @access  Private
+export const syncProjectFromRepo = async (req, res) => {
+  try {
+    const { repoUrl } = req.body;
+    const access = await getProjectAccess(req.params.id, req.user._id);
+
+    if (!access.exists) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    if (!access.canEdit) {
+      return res.status(403).json({ message: 'Not authorized to sync this project' });
+    }
+
+    const project = access.project;
+    let provider = 'other';
+    let apiUrl = '';
+
+    if (repoUrl.includes('github.com')) {
+      provider = 'github';
+      // Convert https://github.com/owner/repo to https://api.github.com/repos/owner/repo
+      const parts = repoUrl.split('github.com/')[1].split('/');
+      apiUrl = `https://api.github.com/repos/${parts[0]}/${parts[1]}`;
+    } else if (repoUrl.includes('gitlab.com')) {
+      provider = 'gitlab';
+      // GitLab API for project info
+      const path = repoUrl.split('gitlab.com/')[1].replace(/\//g, '%2F');
+      apiUrl = `https://gitlab.com/api/v4/projects/${path}`;
+    }
+
+    if (apiUrl) {
+      const response = await fetch(apiUrl);
+      if (response.ok) {
+        const repoData = await response.json();
+        project.repoUrl = repoUrl;
+        project.repoProvider = provider;
+        // Optionally update description if empty
+        if (!project.description && (repoData.description || repoData.name)) {
+          project.description = repoData.description || repoData.name;
+        }
+        await project.save();
+      }
+    } else {
+      project.repoUrl = repoUrl;
+      project.repoProvider = provider;
+      await project.save();
+    }
+
+    res.json(project);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error during sync' });
   }
 };

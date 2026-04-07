@@ -3,13 +3,15 @@ import { useContext, useState, useRef, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import {
   Code2, LogOut, User as UserIcon, MessageSquare, Shield, ChevronDown,
-  Users, FileText, BarChart3, Brain, FolderOpen, LayoutDashboard, Menu, X,
+  Users, FileText, BarChart3, Brain, FolderOpen, LayoutDashboard, Menu, X, Sun, Moon
 } from 'lucide-react';
+import { ThemeContext } from '../context/ThemeContext';
 import NotificationBell from './NotificationBell';
 import SearchBar from './SearchBar';
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
+  const { theme, toggleTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
@@ -155,6 +157,13 @@ const Navbar = () => {
                 <Link to="/new-review" className="btn-primary flex items-center gap-2 text-sm whitespace-nowrap shrink-0">
                   New Review
                 </Link>
+                <button 
+                  onClick={toggleTheme} 
+                  className="p-2 text-gray-400 hover:text-primary-400 hover:bg-primary-500/10 rounded-lg transition-all"
+                  title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                >
+                  {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                </button>
                 <NotificationBell />
                 <div className="hidden sm:flex items-center gap-2 ml-1 shrink-0">
                   <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold ${

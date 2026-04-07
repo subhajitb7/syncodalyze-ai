@@ -89,7 +89,8 @@ export const inviteMember = async (req, res) => {
 
     const populated = await Team.findById(team._id)
       .populate('owner', 'name email')
-      .populate('members.user', 'name email');
+      .populate('members.user', 'name email')
+      .populate('projects');
 
     res.json(populated);
   } catch (error) {
@@ -119,7 +120,8 @@ export const removeMember = async (req, res) => {
 
     const populated = await Team.findById(team._id)
       .populate('owner', 'name email')
-      .populate('members.user', 'name email');
+      .populate('members.user', 'name email')
+      .populate('projects');
 
     res.json(populated);
   } catch (error) {
@@ -152,7 +154,8 @@ export const updateMemberRole = async (req, res) => {
 
     const populated = await Team.findById(team._id)
       .populate('owner', 'name email')
-      .populate('members.user', 'name email');
+      .populate('members.user', 'name email')
+      .populate('projects');
 
     res.json(populated);
   } catch (error) {

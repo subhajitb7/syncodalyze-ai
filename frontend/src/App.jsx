@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/Navbar';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
@@ -18,6 +19,7 @@ import ResetPassword from './pages/ResetPassword';
 import Teams from './pages/Teams';
 import TeamDetail from './pages/TeamDetail';
 import AiLogs from './pages/AiLogs';
+import AiChatFloating from './components/AiChatFloating';
 
 // Axios global defaults
 import axios from 'axios';
@@ -40,9 +42,10 @@ const AdminRoute = ({ children }) => {
 };
 
 function AppContent() {
+  const { user } = useContext(AuthContext);
   return (
     <Router>
-      <div className="min-h-screen bg-dark-900 flex flex-col">
+      <div className="min-h-screen bg-dark-900 text-white flex flex-col transition-colors duration-300">
         <Navbar />
         <main className="flex-grow flex flex-col">
           <Routes>
@@ -64,6 +67,7 @@ function AppContent() {
             <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
           </Routes>
         </main>
+        {user && <AiChatFloating />}
       </div>
     </Router>
   );
@@ -71,9 +75,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

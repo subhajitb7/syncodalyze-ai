@@ -39,9 +39,6 @@ export const sendOtpEmail = async (email, otp) => {
   `;
 
   const sent = await sendEmail(email, subject, html);
-  if (!sent) {
-    console.log(`[OTP FALLBACK] OTP for ${email}: ${otp}`);
-  }
   return sent;
 };
 

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import hljs from 'highlight.js';
-import { useParams, Link } from 'react-router-dom';
-import { FileCode, Plus, FolderOpen, ArrowLeft, X, Upload } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { FileCode, Plus, FolderOpen, ArrowLeft, X, Upload, Trash2 } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 const ProjectDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
@@ -57,6 +58,16 @@ const ProjectDetail = () => {
       fetchProject();
     } catch (err) {
       console.error(err);
+    }
+  };
+  
+  const handleDeleteProject = async () => {
+    if (!confirm('Are you sure you want to delete this project? This will permanently remove all files and results.')) return;
+    try {
+      await axios.delete(`/api/projects/${id}`);
+      navigate('/projects');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete project');
     }
   };
 
@@ -113,9 +124,16 @@ const ProjectDetail = () => {
             <p className="text-gray-400 text-sm mt-1">{project.description || 'No description'} · <span className="uppercase text-primary-400">{project.language}</span></p>
           </div>
         </div>
-        <button onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2">
-          <Plus className="h-5 w-5" /> Add File
-        </button>
+        <div className="flex items-center gap-2">
+          {project.canDelete && (
+            <button onClick={handleDeleteProject} className="btn-secondary border-red-500/30 text-red-400 hover:bg-red-400/10 flex items-center gap-2">
+              <Trash2 className="h-4 w-4" /> Delete Project
+            </button>
+          )}
+          <button onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2">
+            <Plus className="h-5 w-5" /> Add File
+          </button>
+        </div>
       </div>
 
       <div className="glass-panel p-6">

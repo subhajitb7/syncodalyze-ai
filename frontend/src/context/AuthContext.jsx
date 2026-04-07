@@ -10,11 +10,27 @@ export const AuthProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const userInfo = localStorage.getItem('userInfo');
-    if (userInfo) {
-      setUser(JSON.parse(userInfo));
-    }
-    setLoading(false);
+    const checkAuth = async () => {
+      const userInfo = localStorage.getItem('userInfo');
+      if (userInfo) {
+        try {
+          const { data } = await axios.get('/api/auth/profile');
+          setUser(data);
+          localStorage.setItem('userInfo', JSON.stringify(data));
+        } catch (error) {
+          console.error('Session sync failed:', error);
+          if (error.response?.status === 401 || error.response?.status === 404) {
+            setUser(null);
+            localStorage.removeItem('userInfo');
+          } else {
+            // Fallback to local storage if server is down but session might be valid
+            setUser(JSON.parse(userInfo));
+          }
+        }
+      }
+      setLoading(false);
+    };
+    checkAuth();
   }, []);
 
   useEffect(() => {
@@ -34,6 +50,9 @@ export const AuthProvider = ({ children }) => {
       if (data.needsVerification) {
         return { success: false, needsVerification: true, email: data.email, message: data.message };
       }
+      if (data.requires2fa) {
+        return { success: false, requires2fa: true, email: data.email, message: data.message };
+      }
       setUser(data);
       localStorage.setItem('userInfo', JSON.stringify(data));
       return { success: true };
@@ -42,7 +61,22 @@ export const AuthProvider = ({ children }) => {
       if (resp?.needsVerification) {
         return { success: false, needsVerification: true, email: resp.email, message: resp.message };
       }
+      if (error.response?.status === 202 && resp?.requires2fa) {
+        return { success: false, requires2fa: true, email: resp.email, message: resp.message };
+      }
       return { success: false, message: resp?.message || 'Login failed' };
+    }
+  };
+
+  const toggleTwoFactor = async () => {
+    try {
+      const { data } = await axios.post('/api/auth/toggle-2fa');
+      const newUser = { ...user, is2faEnabled: data.is2faEnabled };
+      setUser(newUser);
+      localStorage.setItem('userInfo', JSON.stringify(newUser));
+      return { success: true, is2faEnabled: data.is2faEnabled };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Failed to toggle 2FA' };
     }
   };
 
@@ -74,7 +108,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, register, logout, loading, socket }}>
+    <AuthContext.Provider value={{ user, setUser, login, register, logout, toggleTwoFactor, loading, socket }}>
       {children}
     </AuthContext.Provider>
   );

@@ -23,12 +23,16 @@ const FileViewer = () => {
   const [reviewResult, setReviewResult] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const fetchFile = async () => {
       try {
         const { data } = await axios.get(`/api/files/${fileId}`);
         setFile(data);
+        setEditedContent(data.content);
       } catch (err) {
         console.error(err);
       } finally {
@@ -66,6 +70,26 @@ const FileViewer = () => {
     }
   };
 
+  const handleSave = async () => {
+    if (!editedContent.trim()) return;
+    setSaving(true);
+    try {
+      const { data } = await axios.put(`/api/files/${fileId}`, { content: editedContent });
+      setFile(data);
+      setIsEditing(false);
+      setReviewResult(null); // Clear old review on content change
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to save file');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditedContent(file.content);
+    setIsEditing(false);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -91,12 +115,26 @@ const FileViewer = () => {
             </div>
           </div>
           <div className="flex gap-3">
-            <button onClick={fetchHistory} className="btn-secondary flex items-center gap-2 text-sm">
-              <GitBranch className="h-4 w-4" /> History
-            </button>
-            <button onClick={handleReview} disabled={reviewing} className="btn-primary flex items-center gap-2 text-sm disabled:opacity-50">
-              {reviewing ? <><Loader2 className="h-4 w-4 animate-spin" /> Reviewing...</> : <><Sparkles className="h-4 w-4" /> AI Review</>}
-            </button>
+            {!isEditing ? (
+              <>
+                <button onClick={fetchHistory} className="btn-secondary flex items-center gap-2 text-sm">
+                  <GitBranch className="h-4 w-4" /> History
+                </button>
+                <button onClick={() => setIsEditing(true)} className="btn-secondary border-primary-500/30 text-primary-400 flex items-center gap-2 text-sm">
+                   Edit File
+                </button>
+                <button onClick={handleReview} disabled={reviewing} className="btn-primary flex items-center gap-2 text-sm disabled:opacity-50">
+                  {reviewing ? <><Loader2 className="h-4 w-4 animate-spin" /> Reviewing...</> : <><Sparkles className="h-4 w-4" /> AI Review</>}
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={cancelEdit} disabled={saving} className="btn-secondary text-sm">Cancel</button>
+                <button onClick={handleSave} disabled={saving || editedContent === file.content} className="btn-primary flex items-center gap-2 text-sm disabled:opacity-50">
+                  {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</> : 'Save Version'}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -110,9 +148,10 @@ const FileViewer = () => {
                height="100%"
                language={file.language}
                theme="vs-dark"
-               value={file.content}
+               value={editedContent}
+               onChange={(val) => setEditedContent(val || '')}
                options={{
-                 readOnly: true,
+                 readOnly: !isEditing,
                  minimap: { enabled: false },
                  fontSize: 14,
                  fontFamily: "'Fira Code', Consolas, monospace",

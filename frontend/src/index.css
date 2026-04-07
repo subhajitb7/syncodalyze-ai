@@ -8,16 +8,38 @@
   --color-primary-500: #3b82f6;
   --color-primary-600: #2563eb;
   --color-primary-700: #1d4ed8;
-  --color-dark-900: #0f1117;
-  --color-dark-800: #1a1d24;
-  --color-dark-700: #272a35;
-  --color-dark-600: #3f4352;
+
+  /* Theme variables for easy toggling */
+  --color-dark-900: var(--bg-main);
+  --color-dark-800: var(--bg-sec);
+  --color-dark-700: var(--bg-ter);
+  --color-dark-600: var(--border-col);
   --color-dark-500: #596175;
+}
+
+:root {
+  --bg-main: #000000;
+  --bg-sec: #0a0a0a;
+  --bg-ter: #1a1d24;
+  --border-col: #2a2d35;
+  --text-main: #ffffff;
+  --text-sec: #9ca3af;
+}
+
+.light {
+  --bg-main: #ffffff;
+  --bg-sec: #f9fafb;
+  --bg-ter: #f1f5f9;
+  --border-col: #e5e7eb;
+  --text-main: #111827;
+  --text-sec: #4b5563;
 }
 
 @layer base {
   body {
-    @apply bg-dark-900 text-white font-sans antialiased p-0 m-0;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    @apply font-sans antialiased p-0 m-0;
   }
 
   ::selection {
@@ -27,7 +49,7 @@
 
 @layer utilities {
   .glass-panel {
-    @apply bg-dark-800/80 backdrop-blur-md border border-dark-700 rounded-xl shadow-2xl;
+    @apply bg-black/40 backdrop-blur-xl border border-white/5 rounded-xl shadow-2xl;
   }
 
   .glass-input {

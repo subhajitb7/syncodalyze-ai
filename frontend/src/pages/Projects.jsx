@@ -7,7 +7,7 @@ const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ name: '', description: '', language: 'javascript' });
+  const [form, setForm] = useState({ name: '', description: '', language: 'javascript', repoUrl: '' });
 
   const fetchProjects = async () => {
     try {
@@ -27,7 +27,7 @@ const Projects = () => {
     try {
       await axios.post('/api/projects', form);
       setShowModal(false);
-      setForm({ name: '', description: '', language: 'javascript' });
+      setForm({ name: '', description: '', language: 'javascript', repoUrl: '' });
       fetchProjects();
     } catch (err) {
       console.error(err);
@@ -134,6 +134,10 @@ const Projects = () => {
                   <option value="cpp">C++</option>
                   <option value="go">Go</option>
                 </select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-gray-300">Repository URL (Optional)</label>
+                <input type="url" value={form.repoUrl} onChange={(e) => setForm({ ...form, repoUrl: e.target.value })} className="glass-input" placeholder="https://github.com/user/repo" />
               </div>
               <button type="submit" className="btn-primary mt-2">Create Project</button>
             </form>

@@ -19,6 +19,15 @@ const projectSchema = mongoose.Schema(
       type: String,
       default: 'javascript',
     },
+    repoUrl: {
+      type: String,
+      default: '',
+    },
+    repoProvider: {
+      type: String,
+      enum: ['github', 'gitlab', 'other'],
+      default: 'other',
+    },
   },
   {
     timestamps: true,
