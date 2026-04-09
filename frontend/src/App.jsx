@@ -26,9 +26,9 @@ import SecurityUpdate from './pages/SecurityUpdate';
 import AiChatFloating from './components/AiChatFloating';
 import Footer from './components/Footer';
 
-// Axios global defaults
 import axios from 'axios';
-axios.defaults.baseURL = 'http://localhost:5001';
+const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:5001' : `http://${window.location.hostname}:5001`;
+axios.defaults.baseURL = API_URL;
 axios.defaults.withCredentials = true;
 
 const PrivateRoute = ({ children }) => {

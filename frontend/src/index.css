@@ -51,14 +51,16 @@
 
 @layer utilities {
   .glass-panel {
-    @apply backdrop-blur-xl border rounded-xl;
+    @apply backdrop-blur-xl rounded-2xl;
     background-color: var(--bg-sec);
-    border-color: var(--border-col);
+    border: 1px solid var(--border-col);
     box-shadow: var(--shadow-premium);
   }
 
   .dark .glass-panel {
-    @apply bg-black/40 border-white/5;
+    background-color: rgba(10, 10, 10, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    box-shadow: inset 0 1px 1px 0 rgba(0, 0, 0, 0.5);
   }
 
   .glass-input {
@@ -105,6 +107,20 @@
 
   .border-col {
     border-color: var(--border-col);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--border-col);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-500);
   }
 }
 

@@ -100,7 +100,10 @@ export const getProjectById = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to view this project' });
     }
 
-    const files = await CodeFile.find({ project: access.project._id }).select('-content -versions').sort({ createdAt: -1 });
+    const files = await CodeFile.find({ project: access.project._id })
+      .select('-content -versions')
+      .populate('updatedBy createdBy', 'name')
+      .sort({ createdAt: -1 });
     res.json({ 
       ...access.project.toObject(), 
       files, 
@@ -353,7 +356,12 @@ export const syncProjectFromRepo = async (req, res) => {
               if (existingFile.content !== content) {
                 existingFile.content = content;
                 existingFile.currentVersion += 1;
-                existingFile.versions.push({ versionNumber: existingFile.currentVersion, content });
+                existingFile.versions.push({ 
+                  versionNumber: existingFile.currentVersion, 
+                  content,
+                  updatedBy: req.user._id
+                });
+                existingFile.updatedBy = req.user._id;
                 await existingFile.save();
               }
             } else {
@@ -363,7 +371,9 @@ export const syncProjectFromRepo = async (req, res) => {
                 content,
                 language: file.path.split('.').pop() || project.language,
                 currentVersion: 1,
-                versions: [{ versionNumber: 1, content }]
+                versions: [{ versionNumber: 1, content, updatedBy: req.user._id }],
+                updatedBy: req.user._id,
+                createdBy: req.user._id
               });
             }
           } catch (fileErr) {

@@ -28,7 +28,12 @@ export const updateFileContent = async (req, res) => {
     const newVersion = file.currentVersion + 1;
     file.content = content;
     file.currentVersion = newVersion;
-    file.versions.push({ versionNumber: newVersion, content });
+    file.versions.push({ 
+      versionNumber: newVersion, 
+      content,
+      updatedBy: req.user._id
+    });
+    file.updatedBy = req.user._id;
 
     await file.save();
 
@@ -54,10 +59,21 @@ export const updateFileContent = async (req, res) => {
 // @access  Private
 export const getFileById = async (req, res) => {
   try {
-    const file = await CodeFile.findById(req.params.id);
+    console.log(`Fetching file ${req.params.id} for user ${req.user._id}`);
+    const file = await CodeFile.findById(req.params.id)
+      .populate({
+        path: 'versions.reviewId',
+      })
+      .populate('updatedBy createdBy', 'name');
+
     if (!file) {
+      console.warn(`File ${req.params.id} not found`);
       return res.status(404).json({ message: 'File not found' });
     }
+
+    const currentV = file.versions.find(v => Number(v.versionNumber) === Number(file.currentVersion));
+    console.log(`Populated File. Current version: ${file.currentVersion}. ReviewID present: ${!!currentV?.reviewId}, Summary present: ${!!currentV?.aiSummary}`);
+
     res.json(file);
   } catch (error) {
     console.error(error);
@@ -70,7 +86,10 @@ export const getFileById = async (req, res) => {
 // @access  Private
 export const getFileHistory = async (req, res) => {
   try {
-    const file = await CodeFile.findById(req.params.id).select('filename versions currentVersion');
+    const file = await CodeFile.findById(req.params.id)
+      .select('filename versions currentVersion')
+      .populate('versions.updatedBy', 'name');
+
     if (!file) {
       return res.status(404).json({ message: 'File not found' });
     }

@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { ThemeContext } from '../context/ThemeContext';
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Sparkles, Loader2, Clock, GitBranch } from 'lucide-react';
+import { ArrowLeft, Sparkles, Loader2, Clock, GitBranch, FileCode } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -34,11 +34,33 @@ const FileViewer = () => {
   useEffect(() => {
     const fetchFile = async () => {
       try {
+        console.log('Fetching file data for:', fileId);
         const { data } = await axios.get(`/api/files/${fileId}`);
+        console.log('File data received:', data);
+        
         setFile(data);
         setEditedContent(data.content);
+
+        // Auto-load AI results - find by version number or fall back to latest in array
+        let currentV = data.versions.find(v => v.versionNumber === data.currentVersion);
+        if (!currentV && data.versions.length > 0) {
+           currentV = data.versions[data.versions.length - 1]; // Fallback to last item
+        }
+
+        console.log('Current version identified for analysis:', currentV);
+
+        if (currentV) {
+          if (currentV.reviewId) {
+             console.log('Found persistent review result:', currentV.reviewId);
+             setReviewResult(currentV.reviewId);
+          }
+          if (currentV.aiSummary) {
+             console.log('Found persistent AI summary:', currentV.aiSummary);
+             setSummary(currentV.aiSummary);
+          }
+        }
       } catch (err) {
-        console.error(err);
+        console.error('FileViewer Load Error:', err);
       } finally {
         setLoading(false);
       }
@@ -55,6 +77,7 @@ const FileViewer = () => {
         title: file.filename,
         codeSnippet: file.content,
         language: file.language,
+        fileId: file._id, // Pass fileId for persistence
       });
       setReviewResult(data);
     } catch (err) {
@@ -112,7 +135,14 @@ const FileViewer = () => {
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div>
-              <h1 className="font-bold text-lg">{file.filename}</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="font-bold text-lg">{file.filename}</h1>
+                {(reviewResult || summary) && (
+                  <span className="flex items-center gap-1.5 text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded border border-emerald-500/20 animate-pulse">
+                    <CheckCircle className="h-3 w-3" /> Analysis Ready
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-sec">v{file.currentVersion} · {file.language}</p>
             </div>
           </div>
@@ -189,10 +219,36 @@ const FileViewer = () => {
 
         {/* Review Results */}
         {reviewResult && (
-          <div className="flex-1 lg:w-1/2 overflow-y-auto bg-ter/30 p-6">
-            <h3 className="text-lg font-bold text-emerald-600 mb-4 flex items-center gap-2">
-              <Sparkles className="h-5 w-5" /> AI Review Result
-            </h3>
+          <div className="flex-1 lg:w-1/2 overflow-y-auto bg-ter/30 p-6 border-l border-col">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-6 border-b border-col/30">
+               <div>
+                  <h3 className="text-lg font-bold text-main flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-emerald-500" /> AI Review Report
+                  </h3>
+                  <div className="flex items-center gap-2 mt-2">
+                     {reviewResult.bugsFound > 0 ? (
+                        <span className="text-[10px] font-black uppercase bg-red-500/10 text-red-500 px-2 py-1 rounded border border-red-500/20">
+                          {reviewResult.bugsFound} Issues Detected
+                        </span>
+                     ) : (
+                        <span className="text-[10px] font-black uppercase bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded border border-emerald-500/20">
+                          Code is Clean
+                        </span>
+                     )}
+                     <span className="text-[10px] font-bold text-sec opacity-40 uppercase tracking-widest">
+                        v{file.currentVersion}
+                     </span>
+                  </div>
+               </div>
+               <div className="flex flex-wrap gap-1.5 justify-end max-w-[200px]">
+                  {reviewResult.aiTags?.map((tag, i) => (
+                    <span key={i} className="text-[9px] font-black uppercase bg-primary-500/5 text-primary-500 border border-primary-500/10 px-2 py-0.5 rounded-full">
+                      #{tag}
+                    </span>
+                  ))}
+               </div>
+            </div>
+
             <div className="ai-feedback-content">
               <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
@@ -242,7 +298,12 @@ const FileViewer = () => {
                       <span className="text-[10px] bg-primary-500/20 text-primary-600 px-2 py-0.5 rounded border border-primary-500/30 font-bold uppercase tracking-wider">Current</span>
                     )}
                   </div>
-                  <p className="text-[10px] text-sec mt-1 font-bold">{new Date(v.updatedAt).toLocaleString()}</p>
+                  <div className="flex justify-between items-start mt-1">
+                    <p className="text-[10px] text-sec font-bold">{new Date(v.updatedAt).toLocaleString()}</p>
+                    <p className="text-[10px] text-primary-500 font-black uppercase tracking-widest">
+                      by {v.updatedBy?.name || 'Owner'}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>

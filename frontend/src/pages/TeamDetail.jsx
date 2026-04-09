@@ -2,7 +2,9 @@ import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { ArrowLeft, Users, Plus, Trash2, Crown, ShieldCheck, User as UserIcon, FolderOpen, X, UserPlus } from 'lucide-react';
+import { ArrowLeft, Users, Plus, Trash2, Crown, ShieldCheck, User as UserIcon, FolderOpen, X, UserPlus, MessageCircle } from 'lucide-react';
+import CommentSection from '../components/CommentSection';
+import { SocketPubSubContext } from '../context/SocketPubSubContext';
 
 const TeamDetail = () => {
   const { id } = useParams();
@@ -116,7 +118,7 @@ const TeamDetail = () => {
           </div>
         </div>
         {canManage && (
-          <div className="flex gap-2">
+          <div className="flex items-center gap-3">
             <button onClick={() => setShowInvite(true)} className="btn-primary flex items-center gap-2 text-sm">
               <UserPlus className="h-4 w-4" /> Invite
             </button>
@@ -127,72 +129,94 @@ const TeamDetail = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Members */}
-        <div className="glass-panel p-6">
-          <h2 className="text-lg font-bold text-main mb-4 flex items-center gap-2">
-            <Users className="h-5 w-5 text-primary-600" /> Members ({team.members?.length || 0})
-          </h2>
-          <div className="space-y-2">
-            {team.members?.map((m) => (
-              <div key={m.user?._id} className="flex items-center justify-between p-3 bg-sec border border-col rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-primary-500/10 flex items-center justify-center text-sm font-bold text-primary-600">
-                    {m.user?.name?.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-main">{m.user?.name}</span>
-                      {roleIcon(m.role)}
-                      <span className="text-[10px] text-sec font-bold uppercase tracking-wider">{m.role}</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Members (Moved here as 2/3) */}
+          <div className="glass-panel p-6">
+            <h2 className="text-lg font-bold text-main mb-4 flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary-600" /> Members ({team.members?.length || 0})
+            </h2>
+            <div className="space-y-2">
+              {team.members?.map((m) => (
+                <div key={m.user?._id || m.user || Math.random()} className="flex items-center justify-between p-3 bg-sec border border-col rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-full bg-primary-500/10 flex items-center justify-center text-sm font-bold text-primary-600">
+                      {m.user?.name?.charAt(0).toUpperCase()}
                     </div>
-                    <p className="text-xs text-sec font-medium">{m.user?.email}</p>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-main">{m.user?.name}</span>
+                        {roleIcon(m.role)}
+                        <span className="text-[10px] text-sec font-bold uppercase tracking-wider">{m.role}</span>
+                      </div>
+                      <p className="text-xs text-sec font-medium">{m.user?.email}</p>
+                    </div>
                   </div>
+                  {canManage && m.role !== 'owner' && (
+                    <div className="flex items-center gap-1">
+                      <select
+                        value={m.role}
+                        onChange={(e) => handleRoleChange(m.user?._id, e.target.value)}
+                        className="text-xs bg-ter border border-col rounded px-2 py-1 text-main font-medium cursor-pointer"
+                      >
+                        <option value="member">Member</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                      <button onClick={() => handleRemove(m.user?._id)}
+                        className="p-1.5 text-sec hover:text-red-500 hover:bg-red-500/10 rounded transition-colors">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
-                {canManage && m.role !== 'owner' && (
-                  <div className="flex items-center gap-1">
-                    <select
-                      value={m.role}
-                      onChange={(e) => handleRoleChange(m.user?._id, e.target.value)}
-                      className="text-xs bg-ter border border-col rounded px-2 py-1 text-main font-medium cursor-pointer"
-                    >
-                      <option value="member">Member</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                    <button onClick={() => handleRemove(m.user?._id)}
-                      className="p-1.5 text-sec hover:text-red-500 hover:bg-red-500/10 rounded transition-colors">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
+              ))}
+            </div>
+          </div>
+
+          {/* Projects (Moved here as 2/3) */}
+          <div className="glass-panel p-6">
+            <h2 className="text-lg font-bold text-main mb-4 flex items-center gap-2">
+              <FolderOpen className="h-5 w-5 text-primary-600" /> Projects ({team.projects?.length || 0})
+            </h2>
+            {!team.projects || team.projects.length === 0 ? (
+              <p className="text-sec font-medium text-sm text-center py-8">No projects linked yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {team.projects.map((p) => (
+                  <Link key={p._id} to={`/projects/${p._id}`}
+                    className="flex items-center justify-between p-4 bg-sec border border-col rounded-xl hover:border-primary-500/50 hover:shadow-lg transition-all group">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 bg-primary-500/10 rounded-xl flex items-center justify-center group-hover:bg-primary-500 group-hover:text-white transition-all">
+                        <FolderOpen className="h-5 w-5 text-sec group-hover:text-white" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm text-main">{p.name}</p>
+                        <p className="text-[10px] text-sec font-black uppercase tracking-widest opacity-60 mt-0.5">{p.language}</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         </div>
 
-        {/* Projects */}
-        <div className="glass-panel p-6">
-          <h2 className="text-lg font-bold text-main mb-4 flex items-center gap-2">
-            <FolderOpen className="h-5 w-5 text-primary-600" /> Projects ({team.projects?.length || 0})
-          </h2>
-          {!team.projects || team.projects.length === 0 ? (
-            <p className="text-sec font-medium text-sm text-center py-8">No projects linked yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {team.projects.map((p) => (
-                <Link key={p._id} to={`/projects/${p._id}`}
-                  className="flex items-center gap-3 p-3 bg-sec border border-col rounded-lg hover:border-primary-500/50 hover:shadow-lg transition-all">
-                  <FolderOpen className="h-5 w-5 text-sec" />
-                  <div>
-                    <p className="font-bold text-sm text-main">{p.name}</p>
-                    <p className="text-xs text-sec font-medium">{p.language}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+        <div className="lg:col-span-1">
+          <div className="glass-panel p-6 h-full border-col/50">
+            <h3 className="text-xl font-bold text-main mb-6 flex items-center gap-3">
+              <MessageCircle className="h-5 w-5 text-primary-500" />
+              Team Hub
+            </h3>
+            <CommentSection
+              teamId={id}
+              placeholder="Write message..."
+              emptyMessage="No discussions yet. Start the conversation!"
+              userRole={myRole}
+            />
+          </div>
         </div>
       </div>
+
 
       {/* Invite Modal */}
       {showInvite && (

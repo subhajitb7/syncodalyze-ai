@@ -2,15 +2,15 @@ import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import hljs from 'highlight.js';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { 
-  FileCode, Plus, FolderOpen, ArrowLeft, X, Upload, Trash2, 
+import {
+  FileCode, Plus, FolderOpen, ArrowLeft, X, Upload, Trash2,
   RefreshCw, Settings, ChevronDown, CheckCircle, Sparkles,
-  MessageSquare, StickyNote 
+  MessageSquare, StickyNote, ListTodo
 } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { ThemeContext } from '../context/ThemeContext';
 import { SocketPubSubContext } from '../context/SocketPubSubContext';
-import ProjectChatDrawer from '../components/ProjectChatDrawer';
+import CommentSection from '../components/CommentSection';
 
 const ProjectDetail = () => {
   const { theme } = useContext(ThemeContext);
@@ -30,6 +30,7 @@ const ProjectDetail = () => {
   const [typingUser, setTypingUser] = useState(null);
   const [uploadQueue, setUploadQueue] = useState([]); // New Bulk Queue
   const [isBulkMode, setIsBulkMode] = useState(false);
+  const [userRole, setUserRole] = useState('member');
 
   const { subscribe, socket } = useContext(SocketPubSubContext);
 
@@ -65,6 +66,11 @@ const ProjectDetail = () => {
     try {
       const { data } = await axios.get(`/api/projects/${id}`);
       setProject(data);
+      if (data.team?.members) {
+        const currentUser = JSON.parse(localStorage.getItem('user'));
+        const member = data.team.members.find(m => (m.user?._id || m.user) === currentUser?._id);
+        if (member) setUserRole(member.role);
+      }
       fetchMessages();
     } catch (err) {
       console.error(err);
@@ -78,7 +84,7 @@ const ProjectDetail = () => {
   // Subscribe to Real-Time Pub/Sub (Only for Team Projects)
   useEffect(() => {
     if (!id || !project?.team) return;
-    
+
     const unsubscribe = subscribe(`project:${id}`, (event) => {
       if (event.type === 'NEW_MESSAGE') {
         const msg = event.data;
@@ -142,7 +148,7 @@ const ProjectDetail = () => {
               setFileForm(prev => ({ ...prev, language: standardLang }));
             }
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     }, 500);
     return () => clearTimeout(timer);
@@ -183,8 +189,8 @@ const ProjectDetail = () => {
           };
           detectedLang = mapping[detect.language.toLowerCase()] || 'javascript';
         }
-      } catch (e) {}
-      
+      } catch (e) { }
+
       newItems.push({
         filename: file.name,
         content,
@@ -219,7 +225,7 @@ const ProjectDetail = () => {
       setSyncing(false);
     }
   };
-  
+
   const handleDeleteProject = async () => {
     if (!confirm('Are you sure you want to delete this project? This will permanently remove all files and results.')) return;
     try {
@@ -311,33 +317,18 @@ const ProjectDetail = () => {
                 </span>
               ) : (
                 <span className="ml-2 px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-full text-[9px] uppercase font-black tracking-widest border border-emerald-500/10">
-                   {project.team.name} Team
+                  {project.team.name} Team
                 </span>
               )}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {project.team && (
-          <button 
-            onClick={() => setChatOpen(true)}
-            className="h-12 w-12 bg-sec hover:bg-sec/80 border border-col rounded-xl flex items-center justify-center text-sec hover:text-primary-500 transition-all shadow-sm group relative"
-            title="Team Discussion"
-          >
-            <MessageSquare className="h-5 w-5 group-hover:scale-110 transition-transform" />
-            {(unreadCount > 0 || typingUser) && (
-              <span className={`absolute -top-1 -right-1 h-5 min-w-[20px] px-1 bg-primary-500 border-2 border-main rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-lg animate-bounce`}>
-                {typingUser ? '...' : unreadCount}
-              </span>
-            )}
-          </button>
-          )}
-          
-          {project.team && <div className="h-10 w-[1px] bg-col mx-2 hidden sm:block"></div>}
+
 
           {project.repoUrl && (
-            <button 
-              onClick={handleSync} 
+            <button
+              onClick={handleSync}
               disabled={syncing}
               className={`btn-secondary h-12 px-6 flex items-center gap-2 font-bold ${syncing ? 'opacity-50 cursor-not-allowed' : ''}`}
               title="Pull latest files from repository"
@@ -357,68 +348,80 @@ const ProjectDetail = () => {
         </div>
       </div>
 
-      <div className="glass-panel p-8 shadow-2xl relative overflow-hidden group">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 blur-[100px] pointer-events-none group-hover:bg-primary-500/10 transition-all"></div>
-        <h2 className="text-xl font-bold text-main mb-8 flex items-center gap-3">
-          <FileCode className="h-5 w-5 text-primary-500" /> 
-          Project Files
-          <span className="px-2 py-0.5 bg-sec text-sec text-[10px] rounded-md border border-col font-black">{project.files?.length || 0} items</span>
-        </h2>
-        {!project.files || project.files.length === 0 ? (
-          <div className="text-center py-20 flex flex-col items-center gap-6">
-            <div className="h-20 w-20 bg-sec rounded-3xl border border-col flex items-center justify-center opacity-40">
-                <FolderOpen className="h-10 w-10 text-sec" />
-            </div>
-            <div>
-                 <p className="text-lg font-bold text-main mb-2">Empty Universe</p>
-                 <p className="text-sm text-sec font-medium max-w-xs mx-auto">This project hasn't been populated with any source code yet.</p>
-            </div>
-            <button onClick={() => setShowUpload(true)} className="btn-primary px-8">Upload First File</button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {project.files.map((file) => (
-              <Link
-                key={file._id}
-                to={`/projects/${id}/files/${file._id}`}
-                className="group/file flex flex-col p-5 bg-sec/40 border border-col rounded-2xl hover:border-primary-500/50 hover:bg-sec/80 transition-all duration-300 relative overflow-hidden"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="h-10 w-10 bg-primary-500/10 rounded-xl flex items-center justify-center group-hover/file:bg-primary-500 group-hover/file:text-white transition-all">
-                    <FileCode className="h-5 w-5 text-primary-500 group-hover/file:text-white" />
-                  </div>
-                  {project.canDelete && (
-                    <button 
-                      onClick={(e) => handleDeleteFile(e, file._id)}
-                      className="p-2 text-sec hover:text-red-500 opacity-0 group-hover/file:opacity-100 transition-all"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className={project.team ? "lg:col-span-2" : "lg:col-span-3"}>
+          <div className="glass-panel p-8 shadow-2xl relative overflow-hidden group h-full">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 blur-[100px] pointer-events-none group-hover:bg-primary-500/10 transition-all"></div>
+            <h2 className="text-xl font-bold text-main mb-8 flex items-center gap-3">
+              <FileCode className="h-5 w-5 text-primary-500" />
+              Project Files
+              <span className="px-2 py-0.5 bg-sec text-sec text-[10px] rounded-md border border-col font-black">{project.files?.length || 0} items</span>
+            </h2>
+            {!project.files || project.files.length === 0 ? (
+              <div className="text-center py-20 flex flex-col items-center gap-6">
+                <div className="h-20 w-20 bg-sec rounded-3xl border border-col flex items-center justify-center opacity-40">
+                  <FolderOpen className="h-10 w-10 text-sec" />
                 </div>
-                
-                <h4 className="font-bold text-main truncate mb-1">{file.filename}</h4>
-                <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-sec">
-                  <span className="text-primary-500">v{file.currentVersion}</span>
-                  <span className="h-1 w-1 bg-current rounded-full opacity-20"></span>
-                  <span>{file.language}</span>
+                <div>
+                  <p className="text-lg font-bold text-main mb-2">Empty Universe</p>
+                  <p className="text-sm text-sec font-medium max-w-xs mx-auto">This project hasn't been populated with any source code yet.</p>
                 </div>
+                <button onClick={() => setShowUpload(true)} className="btn-primary px-8">Upload First File</button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {project.files.map((file) => (
+                  <Link key={file._id} to={`/projects/${id}/files/${file._id}`}
+                    className="glass-panel px-6 py-4 flex items-center justify-between hover:bg-white/[0.02] hover:border-primary-500/30 transition-all group/file border-col/30">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="h-10 w-10 bg-primary-500/10 rounded-xl flex items-center justify-center group-hover/file:bg-primary-500 group-hover/file:text-white transition-all shrink-0">
+                        <FileCode className="h-5 w-5 text-primary-500 group-hover/file:text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-bold text-main truncate group-hover/file:text-primary-500 transition-colors uppercase tracking-tight">
+                          {file.filename}
+                        </h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] font-black uppercase text-primary-500 bg-primary-500/10 px-2 py-0.5 rounded-md">V{file.currentVersion || 2}</span>
+                          <span className="text-[10px] font-black uppercase text-sec opacity-60 tracking-widest">{file.language}</span>
+                        </div>
+                      </div>
+                    </div>
 
-                <div className="mt-4 pt-4 border-t border-col flex items-center justify-between opacity-40 group-hover/file:opacity-100 transition-all">
-                   <span className="text-[9px] font-bold text-sec">{new Date(file.createdAt).toLocaleDateString()}</span>
-                   <Settings className="h-3 w-3 text-sec group-hover/file:text-primary-500" />
-                </div>
-              </Link>
-            ))}
+                    <div className="flex items-center gap-4">
+                      {project.canDelete && (
+                        <button
+                          onClick={(e) => handleDeleteFile(e, file._id)}
+                          className="h-8 w-8 rounded-lg bg-red-500/10 flex items-center justify-center opacity-0 group-hover/file:opacity-100 hover:bg-red-500 hover:text-white transition-all text-red-500"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {project.team && (
+          <div className="lg:col-span-1">
+            <div className="glass-panel p-6 h-full border-col/50">
+              <h3 className="text-xl font-bold text-main mb-6 flex items-center gap-3">
+                <ListTodo className="h-5 w-5 text-emerald-500" />
+                Development Insights
+              </h3>
+              <CommentSection
+                projectId={id}
+                placeholder="Write message..."
+                isNotes={true}
+                userRole={userRole}
+              />
+            </div>
           </div>
         )}
       </div>
-
-      <ProjectChatDrawer 
-        projectId={id}
-        isOpen={chatOpen}
-        onClose={() => setChatOpen(false)}
-      />
 
       {showUpload && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
@@ -428,7 +431,7 @@ const ProjectDetail = () => {
             </button>
             <h2 className="text-2xl font-bold text-main mb-6">Upload File</h2>
 
-            <div 
+            <div
               className="mb-4 p-6 border-2 border-dashed border-col rounded-lg text-center bg-ter/30 hover:border-primary-500/50 transition-all cursor-pointer group"
               onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
               onDrop={(e) => {
@@ -443,12 +446,12 @@ const ProjectDetail = () => {
                 <Upload className="h-8 w-8 text-primary-500 group-hover:scale-110 transition-transform" />
                 <span className="text-sm font-bold text-sec">Drop files here or click to browse</span>
                 <p className="text-[10px] text-sec/60 uppercase font-black tracking-widest mt-1">Supports multiple files</p>
-                <input 
-                  type="file" 
-                  onChange={handleFileChange} 
-                  className="hidden" 
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  className="hidden"
                   multiple
-                  accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.go,.html,.css,.json,.md" 
+                  accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.go,.html,.css,.json,.md"
                 />
               </label>
             </div>
@@ -456,8 +459,8 @@ const ProjectDetail = () => {
             {uploadQueue.length > 0 ? (
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                   <h3 className="text-sm font-black uppercase tracking-widest text-primary-500">Upload Queue ({uploadQueue.length} files)</h3>
-                   <button onClick={() => setUploadQueue([])} className="text-[10px] font-black uppercase text-red-500 hover:underline">Clear All</button>
+                  <h3 className="text-sm font-black uppercase tracking-widest text-primary-500">Upload Queue ({uploadQueue.length} files)</h3>
+                  <button onClick={() => setUploadQueue([])} className="text-[10px] font-black uppercase text-red-500 hover:underline">Clear All</button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto p-1">
                   {uploadQueue.map((item, idx) => (
@@ -476,100 +479,98 @@ const ProjectDetail = () => {
                   ))}
                 </div>
                 <form onSubmit={handleUpload} className="mt-4">
-                   <button type="submit" className="btn-primary w-full py-4 text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3">
-                      <Upload className="h-4 w-4" /> Upload {uploadQueue.length} Files
-                   </button>
+                  <button type="submit" className="btn-primary w-full py-4 text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3">
+                    <Upload className="h-4 w-4" /> Upload {uploadQueue.length} Files
+                  </button>
                 </form>
               </div>
             ) : (
               <form onSubmit={handleUpload} className="flex flex-col gap-5">
-              <div className="flex gap-4">
-                <div className="flex flex-col gap-2 flex-1">
-                  <label className="text-sm font-bold text-sec">Filename</label>
-                  <input type="text" value={fileForm.filename} onChange={(e) => setFileForm({ ...fileForm, filename: e.target.value })} required className="glass-input" placeholder="app.js" />
-                </div>
-                <div className="flex flex-col gap-2 w-48">
-                  <label className="text-sm font-bold text-sec">Language</label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-300 font-bold text-xs whitespace-nowrap shadow-sm group h-[42px] w-full justify-between ${
-                        isManualOverride 
-                          ? 'border-primary-500/50 bg-primary-500/5 text-primary-600' 
-                          : 'border-col bg-ter/30 text-sec hover:border-primary-500/30'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        {!isManualOverride && <Sparkles className="h-3 w-3 text-primary-500 animate-pulse" />}
-                        {isManualOverride ? 'Manual' : 'Auto'}: {currentLangName}
-                      </div>
-                      <ChevronDown className={`h-3 w-3 transition-transform duration-300 ${showLanguageMenu ? 'rotate-180' : ''}`} />
-                    </button>
+                <div className="flex gap-4">
+                  <div className="flex flex-col gap-2 flex-1">
+                    <label className="text-sm font-bold text-sec">Filename</label>
+                    <input type="text" value={fileForm.filename} onChange={(e) => setFileForm({ ...fileForm, filename: e.target.value })} required className="glass-input" placeholder="app.js" />
+                  </div>
+                  <div className="flex flex-col gap-2 w-48">
+                    <label className="text-sm font-bold text-sec">Language</label>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-300 font-bold text-xs whitespace-nowrap shadow-sm group h-[42px] w-full justify-between ${isManualOverride
+                            ? 'border-primary-500/50 bg-primary-500/5 text-primary-600'
+                            : 'border-col bg-ter/30 text-sec hover:border-primary-500/30'
+                          }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {!isManualOverride && <Sparkles className="h-3 w-3 text-primary-500 animate-pulse" />}
+                          {isManualOverride ? 'Manual' : 'Auto'}: {currentLangName}
+                        </div>
+                        <ChevronDown className={`h-3 w-3 transition-transform duration-300 ${showLanguageMenu ? 'rotate-180' : ''}`} />
+                      </button>
 
-                    {showLanguageMenu && (
-                      <>
-                        <div className="fixed inset-0 z-40" onClick={() => setShowLanguageMenu(false)}></div>
-                        <div className="absolute top-full mt-2 left-0 w-full glass-panel shadow-2xl overflow-hidden z-50 animate-in slide-in-from-top-2 duration-200">
-                          <div className="px-3 py-2 border-b border-col/50 bg-ter/50">
-                             <p className="text-[10px] uppercase font-black text-sec tracking-wider">Select Language</p>
-                          </div>
-                          <div className="p-1">
-                            {languages.map((l) => (
+                      {showLanguageMenu && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowLanguageMenu(false)}></div>
+                          <div className="absolute top-full mt-2 left-0 w-full glass-panel shadow-2xl overflow-hidden z-50 animate-in slide-in-from-top-2 duration-200">
+                            <div className="px-3 py-2 border-b border-col/50 bg-ter/50">
+                              <p className="text-[10px] uppercase font-black text-sec tracking-wider">Select Language</p>
+                            </div>
+                            <div className="p-1">
+                              {languages.map((l) => (
+                                <button
+                                  type="button"
+                                  key={l.id}
+                                  onClick={() => {
+                                    setFileForm(prev => ({ ...prev, language: l.id }));
+                                    setIsManualOverride(true);
+                                    setShowLanguageMenu(false);
+                                  }}
+                                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-between group ${fileForm.language === l.id ? 'bg-primary-500 text-white shadow-lg' : 'text-sec hover:bg-sec hover:text-main'
+                                    }`}
+                                >
+                                  {l.name}
+                                  {fileForm.language === l.id && <CheckCircle className="h-3 w-3" />}
+                                </button>
+                              ))}
                               <button
                                 type="button"
-                                key={l.id}
                                 onClick={() => {
-                                  setFileForm(prev => ({ ...prev, language: l.id }));
-                                  setIsManualOverride(true);
+                                  setIsManualOverride(false);
                                   setShowLanguageMenu(false);
                                 }}
-                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-between group ${
-                                  fileForm.language === l.id ? 'bg-primary-500 text-white shadow-lg' : 'text-sec hover:bg-sec hover:text-main'
-                                }`}
+                                className="w-full text-left px-3 py-2 mt-1 border-t border-col text-[10px] font-black uppercase text-primary-500 hover:bg-primary-500/5 transition-all"
                               >
-                                {l.name}
-                                {fileForm.language === l.id && <CheckCircle className="h-3 w-3" />}
+                                Reset to Auto-Detect
                               </button>
-                            ))}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setIsManualOverride(false);
-                                setShowLanguageMenu(false);
-                              }}
-                              className="w-full text-left px-3 py-2 mt-1 border-t border-col text-[10px] font-black uppercase text-primary-500 hover:bg-primary-500/5 transition-all"
-                            >
-                              Reset to Auto-Detect
-                            </button>
+                            </div>
                           </div>
-                        </div>
-                      </>
-                    )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-sec">Code Content</label>
-                <div className="h-80 border border-col rounded-lg overflow-hidden bg-main">
-                  <Editor
-                    height="100%"
-                    language={fileForm.language}
-                    theme={theme === 'dark' ? 'vs-dark' : 'vs'}
-                    value={fileForm.content}
-                    onChange={(value) => setFileForm({ ...fileForm, content: value || '' })}
-                    options={{
-                      minimap: { enabled: false },
-                      fontSize: 13,
-                      fontFamily: "'Fira Code', Consolas, monospace",
-                      wordWrap: "on",
-                      padding: { top: 12 },
-                    }}
-                  />
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-bold text-sec">Code Content</label>
+                  <div className="h-80 border border-col rounded-lg overflow-hidden bg-main">
+                    <Editor
+                      height="100%"
+                      language={fileForm.language}
+                      theme={theme === 'dark' ? 'vs-dark' : 'vs'}
+                      value={fileForm.content}
+                      onChange={(value) => setFileForm({ ...fileForm, content: value || '' })}
+                      options={{
+                        minimap: { enabled: false },
+                        fontSize: 13,
+                        fontFamily: "'Fira Code', Consolas, monospace",
+                        wordWrap: "on",
+                        padding: { top: 12 },
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-              <button type="submit" className="btn-primary mt-2">Upload File</button>
-            </form>
+                <button type="submit" className="btn-primary mt-2">Upload File</button>
+              </form>
             )}
           </div>
         </div>
@@ -577,7 +578,7 @@ const ProjectDetail = () => {
 
       {/* Real-time Live Toast (Team Only) */}
       {liveToast && !chatOpen && project.team && (
-        <div 
+        <div
           onClick={() => setChatOpen(true)}
           className="fixed bottom-6 right-6 z-[110] glass-panel p-4 flex items-center gap-4 cursor-pointer hover:scale-105 transition-all shadow-2xl border-primary-500/30 animate-in slide-in-from-right-8 duration-500 max-w-xs"
         >
@@ -591,16 +592,6 @@ const ProjectDetail = () => {
         </div>
       )}
 
-      {project.team && (
-        <ProjectChatDrawer 
-          projectId={id}
-          isOpen={chatOpen}
-          onClose={() => setChatOpen(false)}
-          initialMessages={messages || []}
-          setInitialMessages={setMessages}
-          typingUser={typingUser}
-        />
-      )}
     </div>
   );
 };

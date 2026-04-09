@@ -15,7 +15,8 @@ export const SocketPubSubProvider = ({ children }) => {
   // Initialize Socket
   useEffect(() => {
     if (user && !socket) {
-      const s = io('http://localhost:5001', {
+      const SOCKET_URL = window.location.hostname === 'localhost' ? 'http://localhost:5001' : `http://${window.location.hostname}:5001`;
+      const s = io(SOCKET_URL, {
         withCredentials: true,
         reconnection: true,
         reconnectionAttempts: 10,
@@ -40,8 +41,12 @@ export const SocketPubSubProvider = ({ children }) => {
 
       // Global Listener for Comments/Chat
       s.on('newComment', (data) => {
-        const topicId = data.project ? `project:${data.project}` : `review:${data.review}`;
-        if (subscribers.current[topicId]) {
+        let topicId = '';
+        if (data.team) topicId = `team:${data.team}`;
+        else if (data.project) topicId = `project:${data.project}`;
+        else if (data.review) topicId = `review:${data.review}`;
+        
+        if (topicId && subscribers.current[topicId]) {
           subscribers.current[topicId].forEach(cb => cb({ type: 'NEW_MESSAGE', data }));
         }
       });

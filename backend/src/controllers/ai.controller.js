@@ -33,6 +33,22 @@ export const summarizeFile = async (req, res) => {
     const data = await response.json();
     const summary = data.choices[0]?.message?.content || 'No summary generated.';
 
+    // Save summary to current version
+    console.log(`Persisting summary for file ${fileId}`);
+    try {
+      const currentV = file.versions.find(v => Number(v.versionNumber) === Number(file.currentVersion));
+      if (currentV) {
+        currentV.aiSummary = summary;
+        file.markModified('versions');
+        await file.save();
+        console.log(`Summary persisted for version ${file.currentVersion}`);
+      } else {
+        console.warn(`Version ${file.currentVersion} not found in file ${fileId} for summary`);
+      }
+    } catch (saveError) {
+      console.error('Failed to save AI summary to file:', saveError);
+    }
+
     res.json({ summary });
   } catch (error) {
     console.error(error);

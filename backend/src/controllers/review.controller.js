@@ -103,6 +103,8 @@ export const analyzeCode = async (req, res) => {
       .trim();
 
     let review = null;
+    const { fileId } = req.body;
+
     if (saveToHistory) {
       review = await Review.create({
         user: req.user._id,
@@ -113,6 +115,27 @@ export const analyzeCode = async (req, res) => {
         bugsFound,
         aiTags,
       });
+
+      // Link to file version if fileId is provided
+      if (fileId) {
+        console.log(`Attempting to link review ${review._id} to file ${fileId}`);
+        try {
+          const file = await CodeFile.findById(fileId);
+          if (file) {
+            const currentV = file.versions.find(v => Number(v.versionNumber) === Number(file.currentVersion));
+            if (currentV) {
+              currentV.reviewId = review._id;
+              file.markModified('versions');
+              await file.save();
+              console.log(`Successfully linked review ${review._id} to version ${file.currentVersion}`);
+            } else {
+              console.warn(`Version ${file.currentVersion} not found in file ${fileId}`);
+            }
+          }
+        } catch (linkErr) {
+          console.error('Failed to link review to file version:', linkErr);
+        }
+      }
 
       // Notification
       const notification = await Notification.create({

@@ -10,6 +10,10 @@ const commentSchema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Project',
     },
+    team: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
+    },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,

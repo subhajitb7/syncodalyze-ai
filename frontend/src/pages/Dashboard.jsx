@@ -17,9 +17,11 @@ const Dashboard = () => {
   const [filter, setFilter] = useState('all');
   const [insights, setInsights] = useState('');
   const [fetchingInsights, setFetchingInsights] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
+      setError(null);
       try {
         const [reviewsRes, statsRes] = await Promise.all([
           axios.get('/api/reviews'),
@@ -29,6 +31,7 @@ const Dashboard = () => {
         setStats(statsRes.data);
       } catch (error) {
         console.error('Failed to fetch data', error);
+        setError('Connection failed. Please ensure the backend is reachable.');
       } finally {
         setLoading(false);
       }
@@ -121,38 +124,89 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* AI Insights Card */}
-      <div className="glass-panel p-6 mb-8 border-primary-500/20 bg-primary-500/5 relative overflow-hidden group shadow-2xl shadow-primary-500/5">
-        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
-           <Sparkles className="h-24 w-24 text-primary-500" />
+      {/* AI Intelligence Summary Card */}
+      <div className="glass-panel p-6 sm:p-8 mb-10 border-primary-500/20 bg-gradient-to-br from-primary-500/[0.08] via-transparent to-transparent relative overflow-hidden group shadow-2xl shadow-primary-500/5">
+        <div className="absolute top-0 right-0 w-full h-full opacity-[0.03] pointer-events-none group-hover:opacity-[0.05] transition-opacity duration-700" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+        <div className="absolute -top-12 -right-12 opacity-5 blur-2xl group-hover:scale-110 transition-transform duration-1000">
+           <Sparkles className="h-64 w-64 text-primary-500" />
         </div>
-        <div className="relative z-10 flex flex-col md:flex-row gap-6 items-start">
-          <div className="h-14 w-14 bg-primary-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-primary-500/30">
-            <Sparkles className="h-7 w-7 text-white" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h2 className="text-xl font-bold text-main">AI Developer Insights</h2>
-            </div>
-            {fetchingInsights ? (
-              <div className="flex items-center gap-2 text-sec text-sm mt-2">
-                <Loader2 className="h-4 w-4 animate-spin text-primary-500" /> Analyzing your coding patterns...
+        
+        <div className="relative z-10 flex flex-col lg:flex-row gap-8 lg:gap-12 items-center">
+          {/* AI Info */}
+          <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center flex-1 text-center md:text-left min-w-0">
+            <div className="h-14 w-14 bg-primary-500 rounded-2xl flex items-center justify-center shrink-0 shadow-2xl shadow-primary-500/40 relative transform group-hover:rotate-6 transition-transform">
+              <Sparkles className="h-7 w-7 text-white" />
+              <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-emerald-500 rounded-full border-4 border-sec flex items-center justify-center">
+                <div className="h-2 w-2 bg-white rounded-full animate-pulse"></div>
               </div>
-            ) : (
-              <p className="text-sec leading-relaxed max-w-3xl italic font-medium">
-                "{insights || "Keep reviewing code to unlock personalized growth tips from your AI mentor."}"
-              </p>
-            )}
-          </div>
-          <div className="md:border-l border-col md:pl-6 flex flex-col gap-2 shrink-0">
-             <div className="text-[10px] font-black text-sec uppercase tracking-widest">Growth Metric</div>
-             <div className="flex items-center gap-2">
-                <div className="h-2 w-32 bg-col rounded-full overflow-hidden">
-                   <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${stats.cleanPercent}%` }}></div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-4 justify-center md:justify-start">
+                <h2 className="text-xl font-black text-main tracking-tighter uppercase whitespace-nowrap">AI Intelligence Summary</h2>
+                <div className="h-px bg-col/50 flex-1 hidden md:block"></div>
+              </div>
+              
+              {fetchingInsights ? (
+                <div className="flex items-center gap-4 text-primary-500 text-sm mt-3 font-black animate-pulse">
+                  <div className="flex gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-primary-500 animate-bounce [animation-delay:-0.3s]"></span>
+                    <span className="h-2 w-2 rounded-full bg-primary-500 animate-bounce [animation-delay:-0.15s]"></span>
+                    <span className="h-2 w-2 rounded-full bg-primary-500 animate-bounce"></span>
+                  </div>
+                  SYNTESIZING PERSONALIZED GROWTH TRAJECTORY...
                 </div>
-                <span className="text-sm font-bold text-main">{stats.cleanPercent}%</span>
+              ) : (
+                <div className="relative group/text px-2 min-h-[4rem] flex items-center">
+                  <span className="text-6xl absolute -top-10 -left-6 opacity-10 font-serif text-primary-500 group-hover:opacity-20 transition-opacity select-none pointer-events-none">"</span>
+                  <div className="text-main leading-relaxed text-sm md:text-base font-bold italic relative z-10 pl-6 pr-4 text-justify [text-justify:inter-word]">
+                    {insights ? (
+                      insights.split(/(bugs|improvements|strengths|focus|quality|performance|security)/gi).map((part, i) => (
+                        <span key={i} className={/bugs|improvements|strengths|focus|quality|performance|security/i.test(part) ? 'text-primary-500 font-black not-italic px-1 bg-primary-500/5 rounded' : ''}>
+                          {part}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="opacity-60 text-sec">Analyze more code to unlock your personalized engineering trajectory by allowing the AI to synthesize your review patterns...</span>
+                    )}
+                  </div>
+                  <span className="text-6xl absolute -bottom-12 -right-4 opacity-10 font-serif text-primary-500 group-hover:opacity-20 transition-opacity select-none pointer-events-none">"</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Metric Section */}
+          <div className="lg:border-l border-col/30 lg:pl-12 flex flex-col items-center gap-5 shrink-0">
+             <div className="relative h-28 w-28 flex items-center justify-center group/metric">
+                <div className="absolute inset-0 bg-primary-500/10 rounded-full blur-2xl opacity-0 group-hover/metric:opacity-100 transition-opacity duration-500"></div>
+                <svg className="h-full w-full rotate-[-90deg] relative z-10">
+                  <circle
+                    cx="56" cy="56" r="48"
+                    className="stroke-ter/50 fill-none stroke-[6]"
+                  />
+                  <circle
+                    cx="56" cy="56" r="48"
+                    className="stroke-primary-500 fill-none stroke-[6] transition-all duration-1000 ease-out"
+                    strokeDasharray="301.59"
+                    strokeDashoffset={301.59 - (301.59 * stats.cleanPercent) / 100}
+                    strokeLinecap="round"
+                    style={{ filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.4))' }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+                   <span className="text-3xl font-black text-main tracking-tighter">{stats.cleanPercent}%</span>
+                   <span className="text-[7px] font-black text-primary-500 uppercase tracking-[0.3em] mt-0.5">Stability</span>
+                </div>
              </div>
-             <p className="text-[10px] text-sec max-w-[140px] font-bold">Overall Code Stability Score based on your history.</p>
+             
+             <div className="text-center">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-500/5 border border-primary-500/10 rounded-full mb-2">
+                   <span className="text-[8px] font-black text-sec uppercase tracking-[0.2em]">Growth Metric</span>
+                </div>
+                <p className="text-[9px] text-sec max-w-[160px] font-bold leading-tight uppercase opacity-60">
+                   Syncing with <span className="text-main font-black underline decoration-primary-500/30 decoration-2">{stats.totalReviews} analyzes</span>
+                </p>
+             </div>
           </div>
         </div>
       </div>
