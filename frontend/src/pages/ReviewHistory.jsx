@@ -126,15 +126,18 @@ const ReviewHistory = () => {
                    <div className="h-10 w-10 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500">
                       <FileCode className="h-5 w-5" />
                    </div>
-                   <div>
-                      <h3 className="font-bold text-main line-clamp-1 group-hover:text-primary-500 transition-colors">
-                        {review.title || 'Untitled Review'}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-0.5">
-                         <span className="text-[10px] font-black uppercase text-sec tracking-widest">{review.language}</span>
-                      </div>
-                   </div>
-                </div>
+                    <div>
+                       <h3 className="font-bold text-main line-clamp-1 group-hover:text-primary-500 transition-colors">
+                         {review.title || 'Untitled Review'}
+                       </h3>
+                       <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <span className="text-[9px] font-black uppercase text-sec tracking-wider opacity-60">{review.language}</span>
+                          {review.aiTags && review.aiTags.slice(0, 2).map((tag, idx) => (
+                            <span key={idx} className="text-[8px] bg-primary-500/5 text-primary-600 px-1.5 py-0.5 rounded-full border border-primary-500/10 font-bold uppercase tracking-tighter">#{tag}</span>
+                          ))}
+                       </div>
+                    </div>
+                 </div>
               </div>
 
               <div className="flex items-center gap-4 mb-6">

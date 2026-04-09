@@ -17,6 +17,7 @@ import adminRoutes from './routes/admin.routes.js';
 import searchRoutes from './routes/search.routes.js';
 import ailogRoutes from './routes/ailog.routes.js';
 import teamRoutes from './routes/team.routes.js';
+import aiRoutes from './routes/ai.routes.js';
 
 dotenv.config();
 
@@ -97,6 +98,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/ai', aiRoutes);
 app.use('/api/ai-logs', ailogRoutes);
 app.use('/api/teams', teamRoutes);
 

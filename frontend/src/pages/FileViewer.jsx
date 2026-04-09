@@ -28,6 +28,8 @@ const FileViewer = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState('');
   const [saving, setSaving] = useState(false);
+  const [summarizing, setSummarizing] = useState(false);
+  const [summary, setSummary] = useState('');
 
   useEffect(() => {
     const fetchFile = async () => {
@@ -72,18 +74,16 @@ const FileViewer = () => {
     }
   };
 
-  const handleSave = async () => {
-    if (!editedContent.trim()) return;
-    setSaving(true);
+  const handleSummarize = async () => {
+    setSummarizing(true);
+    setSummary('');
     try {
-      const { data } = await axios.put(`/api/files/${fileId}`, { content: editedContent });
-      setFile(data);
-      setIsEditing(false);
-      setReviewResult(null); // Clear old review on content change
+      const { data } = await axios.post('/api/ai/summarize-file', { fileId });
+      setSummary(data.summary);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to save file');
+      console.error(err);
     } finally {
-      setSaving(false);
+      setSummarizing(false);
     }
   };
 
@@ -125,8 +125,11 @@ const FileViewer = () => {
                 <button onClick={() => setIsEditing(true)} className="btn-secondary border-primary-500/30 text-primary-600 flex items-center gap-2 text-sm font-bold">
                    Edit File
                 </button>
-                <button onClick={handleReview} disabled={reviewing} className="btn-primary flex items-center gap-2 text-sm disabled:opacity-50 font-bold">
+                <button onClick={handleReview} disabled={reviewing} className="btn-primary flex items-center gap-2 text-sm disabled:opacity-50 font-bold shadow-lg shadow-emerald-500/10">
                   {reviewing ? <><Loader2 className="h-4 w-4 animate-spin" /> Reviewing...</> : <><Sparkles className="h-4 w-4" /> AI Review</>}
+                </button>
+                <button onClick={handleSummarize} disabled={summarizing} className="btn-primary bg-purple-600 border-purple-700 hover:bg-purple-700 flex items-center gap-2 text-sm disabled:opacity-50 font-bold shadow-lg shadow-purple-500/10">
+                  {summarizing ? <><Loader2 className="h-4 w-4 animate-spin" /> Summarizing...</> : <><FileCode className="h-4 w-4" /> AI Summary</>}
                 </button>
               </>
             ) : (
@@ -140,6 +143,26 @@ const FileViewer = () => {
           </div>
         </div>
       </div>
+
+      {/* AI Summary Banner */}
+      {summary && (
+        <div className="bg-purple-500/10 border-b border-purple-500/20 p-6 animate-in slide-in-from-top-2 duration-300">
+           <div className="max-w-7xl mx-auto flex gap-6 items-start">
+              <div className="h-12 w-12 bg-purple-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/30">
+                <FileCode className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1">
+                 <h4 className="text-sm font-black text-purple-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                   AI File Logic Summary
+                   <button onClick={() => setSummary('')} className="ml-auto text-sec hover:text-main text-xs normal-case font-bold">Dismiss</button>
+                 </h4>
+                 <div className="text-sm text-main font-medium leading-relaxed prose prose-invert max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{summary}</ReactMarkdown>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">

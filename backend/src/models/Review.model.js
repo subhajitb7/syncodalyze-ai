@@ -32,6 +32,7 @@ const reviewSchema = mongoose.Schema(
       enum: ['Pending', 'In Review', 'Needs Changes', 'Approved'],
       default: 'Pending',
     },
+    aiTags: [String],
   },
   {
     timestamps: true,

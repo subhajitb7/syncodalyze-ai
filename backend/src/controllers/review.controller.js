@@ -45,7 +45,7 @@ export const analyzeCode = async (req, res) => {
           {
             role: 'system',
             content:
-              'You are an expert code reviewer. Analyze the provided code, find any bugs or vulnerabilities, suggest improvements, and give an overall rating out of 10. Format your response clearly in Markdown. Point out specific lines if possible. At the very end of your response, strictly include the count of distinct bugs/vulnerabilities found in this format: [ISSUES_COUNT]: X (where X is the number). Do NOT include a main title/heading like "Code Review" or "Analysis" at the top of your response, just start directly with your observations.',
+              'You are an expert code reviewer. Analyze the provided code, find any bugs or vulnerabilities, suggest improvements, and give an overall rating out of 10. Format your response clearly in Markdown. Point out specific lines if possible. \n\nAt the very end of your response, strictly include these two metadata tags:\n1. [ISSUES_COUNT]: X (where X is the number of bugs/vulnerabilities)\n2. [TAGS]: tag1, tag2, tag3 (where tags are categories like #Security, #Performance, #UI, #Logic, #React, etc. Provide at least 3 relevant tags). \n\nDo NOT include a main title/heading like "Code Review" or "Analysis" at the top of your response, just start directly with your observations.',
           },
           { role: 'user', content: prompt },
         ],
@@ -82,21 +82,25 @@ export const analyzeCode = async (req, res) => {
     const tokensUsed = data.usage?.total_tokens || 0;
     const saveToHistory = req.body.saveToHistory !== false;
 
+    // Extract Issues Count
     let bugsFound = 0;
-    // Priority 1: Structured Tag [ISSUES_COUNT]: X
-    const tagMatch = aiFeedback.match(/\[ISSUES_COUNT\]:\s*(\d+)/i);
-    if (tagMatch) {
-      bugsFound = parseInt(tagMatch[1], 10);
-    } else {
-      // Priority 2: Traditional regex (e.g., "3 bugs found")
-      const bugMatch = aiFeedback.match(/(\d+)\s*(?:bug|issue|error|vulnerability)/i);
-      if (bugMatch) {
-        bugsFound = parseInt(bugMatch[1], 10);
-      }
+    const bugsMatch = aiFeedback.match(/\[ISSUES_COUNT\]:\s*(\d+)/i);
+    if (bugsMatch) {
+      bugsFound = parseInt(bugsMatch[1]);
     }
-    
+
+    // Priority 3: Extract Tags
+    let aiTags = [];
+    const tagsMatch = aiFeedback.match(/\[TAGS\]:\s*(.*)/i);
+    if (tagsMatch) {
+      aiTags = tagsMatch[1].split(',').map(t => t.trim().replace(/^#/, ''));
+    }
+
     // Remove structured tags from the final feedback shown to user for cleaner UI
-    const finalFeedback = aiFeedback.replace(/\[ISSUES_COUNT\]:\s*\d+/gi, '').trim();
+    const finalFeedback = aiFeedback
+      .replace(/\[ISSUES_COUNT\]:\s*\d+/gi, '')
+      .replace(/\[TAGS\]:\s*(.*)/gi, '')
+      .trim();
 
     let review = null;
     if (saveToHistory) {
@@ -107,6 +111,7 @@ export const analyzeCode = async (req, res) => {
         language,
         aiFeedback: finalFeedback,
         bugsFound,
+        aiTags,
       });
 
       // Notification

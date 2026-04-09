@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import {
   FileCode, History, Plus, AlertCircle, CheckCircle2,
-  BarChart3, Bug, CheckCircle, Shield, Loader2, Upload, ChevronRight
+  BarChart3, Bug, CheckCircle, Shield, Loader2, Upload, ChevronRight, Sparkles
 } from 'lucide-react';
 import GithubIcon from '../components/GithubIcon';
 import SearchBar from '../components/SearchBar';
@@ -15,6 +15,8 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ totalReviews: 0, totalBugs: 0, cleanPercent: 100 });
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [insights, setInsights] = useState('');
+  const [fetchingInsights, setFetchingInsights] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,7 +33,19 @@ const Dashboard = () => {
         setLoading(false);
       }
     };
+    const fetchInsights = async () => {
+      setFetchingInsights(true);
+      try {
+        const { data } = await axios.get('/api/ai/insights');
+        setInsights(data.insights);
+      } catch (err) {
+        console.error('Failed to fetch insights', err);
+      } finally {
+        setFetchingInsights(false);
+      }
+    };
     fetchData();
+    fetchInsights();
   }, []);
 
 
@@ -107,6 +121,42 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* AI Insights Card */}
+      <div className="glass-panel p-6 mb-8 border-primary-500/20 bg-primary-500/5 relative overflow-hidden group shadow-2xl shadow-primary-500/5">
+        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
+           <Sparkles className="h-24 w-24 text-primary-500" />
+        </div>
+        <div className="relative z-10 flex flex-col md:flex-row gap-6 items-start">
+          <div className="h-14 w-14 bg-primary-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-primary-500/30">
+            <Sparkles className="h-7 w-7 text-white" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h2 className="text-xl font-bold text-main">AI Developer Insights</h2>
+            </div>
+            {fetchingInsights ? (
+              <div className="flex items-center gap-2 text-sec text-sm mt-2">
+                <Loader2 className="h-4 w-4 animate-spin text-primary-500" /> Analyzing your coding patterns...
+              </div>
+            ) : (
+              <p className="text-sec leading-relaxed max-w-3xl italic font-medium">
+                "{insights || "Keep reviewing code to unlock personalized growth tips from your AI mentor."}"
+              </p>
+            )}
+          </div>
+          <div className="md:border-l border-col md:pl-6 flex flex-col gap-2 shrink-0">
+             <div className="text-[10px] font-black text-sec uppercase tracking-widest">Growth Metric</div>
+             <div className="flex items-center gap-2">
+                <div className="h-2 w-32 bg-col rounded-full overflow-hidden">
+                   <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${stats.cleanPercent}%` }}></div>
+                </div>
+                <span className="text-sm font-bold text-main">{stats.cleanPercent}%</span>
+             </div>
+             <p className="text-[10px] text-sec max-w-[140px] font-bold">Overall Code Stability Score based on your history.</p>
+          </div>
+        </div>
+      </div>
+
 
 
 
@@ -158,7 +208,7 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredReviews.map((review) => (
+            {filteredReviews.slice(0, 3).map((review) => (
               <Link
                 key={review._id}
                 to={`/review/${review._id}`}

@@ -21,14 +21,17 @@ SyntaxHighlighter.registerLanguage('typescript', typescript);
 
 const NewReview = () => {
   const { theme } = useContext(ThemeContext);
-  const [title, setTitle] = useState('');
-  const [language, setLanguage] = useState('javascript');
-  const [codeSnippet, setCodeSnippet] = useState('');
+  const [title, setTitle] = useState(localStorage.getItem('draft_title') || '');
+  const [language, setLanguage] = useState(localStorage.getItem('draft_lang') || 'javascript');
+  const [codeSnippet, setCodeSnippet] = useState(localStorage.getItem('draft_code') || '');
   const [isManualOverride, setIsManualOverride] = useState(false);
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState(() => {
+    const saved = localStorage.getItem('draft_result');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [error, setError] = useState(null);
   const { socket } = useContext(AuthContext);
   const [aiProgressText, setAiProgressText] = useState('Uploading code snippet for AI processing...');
@@ -60,6 +63,27 @@ const NewReview = () => {
       return () => socket.off('aiProgress', handleProgress);
     }
   }, [socket]);
+
+  // Persistence logic
+  useEffect(() => {
+    localStorage.setItem('draft_title', title);
+  }, [title]);
+
+  useEffect(() => {
+    localStorage.setItem('draft_code', codeSnippet);
+  }, [codeSnippet]);
+
+  useEffect(() => {
+    localStorage.setItem('draft_lang', language);
+  }, [language]);
+
+  useEffect(() => {
+    if (result) {
+      localStorage.setItem('draft_result', JSON.stringify(result));
+    } else {
+      localStorage.removeItem('draft_result');
+    }
+  }, [result]);
 
   useEffect(() => {
     if (isManualOverride) return;
@@ -117,6 +141,8 @@ const NewReview = () => {
         saveToHistory: saveHistory,
       });
       setResult(data);
+      // We no longer remove items here immediately, 
+      // so they stay on refresh until user starts a new draft or closes it.
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to analyze code.');
     } finally {

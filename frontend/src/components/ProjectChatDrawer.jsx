@@ -2,9 +2,11 @@ import { useState, useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { SocketPubSubContext } from '../context/SocketPubSubContext';
+import useSpeechToText from '../hooks/useSpeechToText';
 import { 
   X, Send, User, Sparkles, MessageSquare, 
-  Trash2, ListTodo, Plus, Info, Clock, CheckCircle2
+  Trash2, ListTodo, Plus, Info, Clock, CheckCircle2,
+  Mic, MicOff
 } from 'lucide-react';
 
 const ProjectChatDrawer = ({ projectId, isOpen, onClose, initialMessages: messages = [], setInitialMessages: setMessages, typingUser }) => {
@@ -14,6 +16,11 @@ const ProjectChatDrawer = ({ projectId, isOpen, onClose, initialMessages: messag
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const { isListening, transcript, startListening, stopListening } = useSpeechToText();
+
+  useEffect(() => {
+    if (transcript) setText(transcript);
+  }, [transcript]);
 
   const socketRoom = `project:${projectId}`;
 
@@ -161,6 +168,16 @@ const ProjectChatDrawer = ({ projectId, isOpen, onClose, initialMessages: messag
             rows={2}
           />
           <div className="absolute bottom-2 right-2 flex items-center gap-2">
+            <button
+               type="button"
+               onClick={isListening ? stopListening : startListening}
+               className={`h-10 w-10 rounded-xl flex items-center justify-center transition-all ${
+                 isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-sec text-sec hover:text-primary-500'
+               }`}
+               title={isListening ? 'Stop Listening' : 'Voice Typing'}
+            >
+              {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            </button>
             <button
                type="submit"
                disabled={!text.trim()}

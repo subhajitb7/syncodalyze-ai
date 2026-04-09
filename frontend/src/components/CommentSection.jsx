@@ -1,7 +1,5 @@
-import { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-import { AuthContext } from '../context/AuthContext';
-import { Send, Trash2, User, CheckSquare, Square, Pencil, Check, X, ListTodo } from 'lucide-react';
+import { Send, Trash2, User, CheckSquare, Square, Pencil, Check, X, ListTodo, Mic, MicOff } from 'lucide-react';
+import useSpeechToText from '../hooks/useSpeechToText';
 
 const CommentSection = ({ 
   reviewId, 
@@ -17,6 +15,11 @@ const CommentSection = ({
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
+  const { isListening, transcript, startListening, stopListening } = useSpeechToText();
+
+  useEffect(() => {
+    if (transcript) setText(transcript);
+  }, [transcript]);
 
   const isNotes = title.toLowerCase().includes('note');
   const contextId = reviewId || projectId;
@@ -237,6 +240,18 @@ const CommentSection = ({
               >
                 <ListTodo className="h-3.5 w-3.5" />
                 {isTodoMode ? 'Task Mode' : (isNotes ? 'Note Mode' : 'Chat Mode')}
+              </button>
+              <button 
+                type="button"
+                onClick={isListening ? stopListening : startListening}
+                className={`p-2 rounded-lg transition-all ${
+                  isListening 
+                    ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/20' 
+                    : 'text-sec hover:bg-sec/50'
+                }`}
+                title={isListening ? "Stop Listening" : "Voice Typing"}
+              >
+                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               </button>
             </div>
             <button 

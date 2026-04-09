@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useContext } from 'react';
 import { ThemeContext } from '../context/ThemeContext';
 import axios from 'axios';
-import { MessageSquare, Send, X, Bot, User, Loader2, Minimize2 } from 'lucide-react';
+import { MessageSquare, Send, X, Bot, User, Loader2, Minimize2, Mic, MicOff } from 'lucide-react';
+import useSpeechToText from '../hooks/useSpeechToText';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -14,6 +15,11 @@ const AiChatFloating = () => {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
   const { theme } = useContext(ThemeContext);
+  const { isListening, transcript, startListening, stopListening } = useSpeechToText();
+
+  useEffect(() => {
+    if (transcript) setInput(transcript);
+  }, [transcript]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -120,13 +126,25 @@ const AiChatFloating = () => {
                 placeholder="Ask anything about coding..."
                 className="w-full glass-input pr-12 text-sm py-3"
               />
-              <button 
-                type="submit"
-                disabled={!input.trim() || loading}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-primary-400 hover:text-primary-300 disabled:opacity-30 transition-colors"
-              >
-                <Send className="h-5 w-5" />
-              </button>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <button
+                   type="button"
+                   onClick={isListening ? stopListening : startListening}
+                   className={`p-1.5 rounded-lg transition-all ${
+                     isListening ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/20' : 'text-sec hover:text-primary-500'
+                   }`}
+                   title={isListening ? "Stop Listening" : "Voice Typing"}
+                >
+                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </button>
+                <button 
+                  type="submit"
+                  disabled={!input.trim() || loading}
+                  className="p-1.5 text-primary-400 hover:text-primary-300 disabled:opacity-30 transition-colors"
+                >
+                  <Send className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </form>
         </div>
