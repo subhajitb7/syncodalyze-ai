@@ -28,6 +28,8 @@ const ProjectDetail = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [liveToast, setLiveToast] = useState(null);
   const [typingUser, setTypingUser] = useState(null);
+  const [uploadQueue, setUploadQueue] = useState([]); // New Bulk Queue
+  const [isBulkMode, setIsBulkMode] = useState(false);
 
   const { subscribe, socket } = useContext(SocketPubSubContext);
 
@@ -149,13 +151,59 @@ const ProjectDetail = () => {
   const handleUpload = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`/api/projects/${id}/files`, fileForm);
+      if (isBulkMode && uploadQueue.length > 0) {
+        await axios.post(`/api/projects/${id}/bulk-files`, { files: uploadQueue });
+      } else {
+        await axios.post(`/api/projects/${id}/files`, fileForm);
+      }
       setShowUpload(false);
       setFileForm({ filename: '', content: '', language: 'javascript' });
+      setUploadQueue([]);
+      setIsBulkMode(false);
       fetchProject();
     } catch (err) {
       console.error(err);
+      alert(err.response?.data?.message || 'Upload failed');
     }
+  };
+
+  const processFiles = async (files) => {
+    const newItems = [];
+    for (const file of files) {
+      const content = await file.text();
+      let detectedLang = 'javascript';
+      try {
+        const detect = hljs.highlightAuto(content);
+        if (detect.language) {
+          const mapping = {
+            'js': 'javascript', 'javascript': 'javascript', 'jsx': 'javascript', 'node': 'javascript',
+            'ts': 'typescript', 'typescript': 'typescript', 'tsx': 'typescript',
+            'py': 'python', 'python': 'python', 'java': 'java', 'cpp': 'cpp', 'go': 'go',
+            'rs': 'rust', 'rb': 'ruby', 'php': 'php', 'sql': 'sql', 'sh': 'shell'
+          };
+          detectedLang = mapping[detect.language.toLowerCase()] || 'javascript';
+        }
+      } catch (e) {}
+      
+      newItems.push({
+        filename: file.name,
+        content,
+        language: detectedLang
+      });
+    }
+    setUploadQueue(prev => [...prev, ...newItems]);
+    setIsBulkMode(true);
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files.length > 0) {
+      processFiles(Array.from(e.target.files));
+    }
+  };
+
+  const removeFromQueue = (index) => {
+    setUploadQueue(prev => prev.filter((_, i) => i !== index));
+    if (uploadQueue.length <= 1) setIsBulkMode(false);
   };
 
   const handleSync = async () => {
@@ -380,15 +428,61 @@ const ProjectDetail = () => {
             </button>
             <h2 className="text-2xl font-bold text-main mb-6">Upload File</h2>
 
-            <div className="mb-4 p-6 border-2 border-dashed border-col rounded-lg text-center bg-ter/30 hover:border-primary-500/50 transition-all cursor-pointer">
+            <div 
+              className="mb-4 p-6 border-2 border-dashed border-col rounded-lg text-center bg-ter/30 hover:border-primary-500/50 transition-all cursor-pointer group"
+              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.dataTransfer.files.length > 0) {
+                  processFiles(Array.from(e.dataTransfer.files));
+                }
+              }}
+            >
               <label className="cursor-pointer flex flex-col items-center gap-2">
-                <Upload className="h-8 w-8 text-primary-500" />
-                <span className="text-sm font-bold text-sec">Click to browse a file, or paste code below</span>
-                <input type="file" onChange={handleFileRead} className="hidden" accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.go,.html,.css,.json,.md" />
+                <Upload className="h-8 w-8 text-primary-500 group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-bold text-sec">Drop files here or click to browse</span>
+                <p className="text-[10px] text-sec/60 uppercase font-black tracking-widest mt-1">Supports multiple files</p>
+                <input 
+                  type="file" 
+                  onChange={handleFileChange} 
+                  className="hidden" 
+                  multiple
+                  accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.go,.html,.css,.json,.md" 
+                />
               </label>
             </div>
 
-            <form onSubmit={handleUpload} className="flex flex-col gap-5">
+            {uploadQueue.length > 0 ? (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                   <h3 className="text-sm font-black uppercase tracking-widest text-primary-500">Upload Queue ({uploadQueue.length} files)</h3>
+                   <button onClick={() => setUploadQueue([])} className="text-[10px] font-black uppercase text-red-500 hover:underline">Clear All</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto p-1">
+                  {uploadQueue.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 bg-sec/30 border border-col rounded-xl group/q">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <FileCode className="h-4 w-4 text-primary-500 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-main truncate">{item.filename}</p>
+                          <p className="text-[9px] font-black text-sec uppercase tracking-tighter">{item.language}</p>
+                        </div>
+                      </div>
+                      <button onClick={() => removeFromQueue(idx)} className="p-1.5 text-sec hover:text-red-500 opacity-0 group-hover/q:opacity-100 transition-all">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <form onSubmit={handleUpload} className="mt-4">
+                   <button type="submit" className="btn-primary w-full py-4 text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3">
+                      <Upload className="h-4 w-4" /> Upload {uploadQueue.length} Files
+                   </button>
+                </form>
+              </div>
+            ) : (
+              <form onSubmit={handleUpload} className="flex flex-col gap-5">
               <div className="flex gap-4">
                 <div className="flex flex-col gap-2 flex-1">
                   <label className="text-sm font-bold text-sec">Filename</label>
@@ -476,6 +570,7 @@ const ProjectDetail = () => {
               </div>
               <button type="submit" className="btn-primary mt-2">Upload File</button>
             </form>
+            )}
           </div>
         </div>
       )}

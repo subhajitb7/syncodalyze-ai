@@ -8,6 +8,7 @@ import {
   deleteProject,
   syncProjectFromRepo,
   deleteFile,
+  bulkUploadFiles,
   getProjectComments,
   addProjectComment
 } from '../controllers/project.controller.js';
@@ -21,6 +22,7 @@ router.get('/:id', protect, getProjectById);
 router.delete('/:id', protect, deleteProject);
 router.post('/:id/repo-sync', protect, syncProjectFromRepo);
 router.post('/:id/files', protect, uploadFile);
+router.post('/:id/bulk-files', protect, bulkUploadFiles);
 router.get('/:id/files', protect, getProjectFiles);
 router.delete('/:id/files/:fileId', protect, deleteFile);
 router.get('/:id/comments', protect, getProjectComments);

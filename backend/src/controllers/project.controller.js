@@ -166,6 +166,81 @@ export const uploadFile = async (req, res) => {
   }
 };
 
+// @desc    Bulk upload files to project
+// @route   POST /api/projects/:id/bulk-files
+// @access  Private
+export const bulkUploadFiles = async (req, res) => {
+  try {
+    const { files } = req.body; // Array of { filename, content, language }
+
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      return res.status(400).json({ message: 'Files array is required' });
+    }
+
+    const access = await getProjectAccess(req.params.id, req.user._id);
+    if (!access.exists) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    if (!access.canEdit) {
+      return res.status(403).json({ message: 'Not authorized to upload files' });
+    }
+
+    const project = access.project;
+    const uploadedFiles = [];
+
+    for (const fileData of files) {
+      const { filename, content, language } = fileData;
+      
+      // Check if file exists
+      let codeFile = await CodeFile.findOne({ project: project._id, filename });
+
+      if (codeFile) {
+        // OVERWRITE / NEW VERSION (As per "Big Platforms" request)
+        codeFile.currentVersion += 1;
+        codeFile.content = content; // Update main content to newest
+        codeFile.versions.push({
+          versionNumber: codeFile.currentVersion,
+          content
+        });
+        await codeFile.save();
+      } else {
+        // NEW FILE
+        codeFile = await CodeFile.create({
+          project: project._id,
+          filename,
+          content,
+          language: language || project.language,
+          currentVersion: 1,
+          versions: [{ versionNumber: 1, content }],
+        });
+      }
+      uploadedFiles.push(codeFile);
+    }
+
+    res.status(201).json({ message: `Successfully uploaded ${uploadedFiles.length} files`, files: uploadedFiles });
+
+    // Single Consolidated System Message
+    try {
+      const io = req.app.get('io');
+      const systemMessage = await Comment.create({
+        project: project._id,
+        user: req.user._id,
+        text: `🚀 bulk uploaded ${uploadedFiles.length} files`,
+        isTodo: false
+      });
+      const populated = await Comment.findById(systemMessage._id).populate('user', 'name');
+      if (io) io.to(`project:${project._id}`).emit('newComment', populated);
+    } catch (e) {
+      console.error('Failed to post system message:', e);
+    }
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // @desc    Get project files
 // @route   GET /api/projects/:id/files
 // @access  Private
