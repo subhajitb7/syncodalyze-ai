@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { ThemeContext } from '../context/ThemeContext';
+import { SocketPubSubContext } from '../context/SocketPubSubContext';
 import ProjectChatDrawer from '../components/ProjectChatDrawer';
 
 const ProjectDetail = () => {
@@ -23,6 +24,12 @@ const ProjectDetail = () => {
   const [fileForm, setFileForm] = useState({ filename: '', content: '', language: 'javascript' });
   const [isManualOverride, setIsManualOverride] = useState(false);
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [liveToast, setLiveToast] = useState(null);
+  const [typingUser, setTypingUser] = useState(null);
+
+  const { subscribe, socket } = useContext(SocketPubSubContext);
 
   const languages = [
     { id: 'javascript', name: 'JavaScript / React' },
@@ -43,10 +50,20 @@ const ProjectDetail = () => {
     { id: 'scala', name: 'Scala' }
   ];
 
+  const fetchMessages = async () => {
+    try {
+      const { data } = await axios.get(`/api/projects/${id}/comments`);
+      setMessages(data);
+    } catch (err) {
+      console.error('Failed to fetch messages:', err);
+    }
+  };
+
   const fetchProject = async () => {
     try {
       const { data } = await axios.get(`/api/projects/${id}`);
       setProject(data);
+      fetchMessages();
     } catch (err) {
       console.error(err);
     } finally {
@@ -55,6 +72,40 @@ const ProjectDetail = () => {
   };
 
   useEffect(() => { fetchProject(); }, [id]);
+
+  // Subscribe to Real-Time Pub/Sub
+  useEffect(() => {
+    if (!id) return;
+    
+    const unsubscribe = subscribe(`project:${id}`, (event) => {
+      if (event.type === 'NEW_MESSAGE') {
+        const msg = event.data;
+        setMessages(prev => {
+          // Prevent duplicates
+          if (prev.find(m => m._id === msg._id)) return prev;
+          return [...prev, msg];
+        });
+
+        // Show unread notification if drawer is closed
+        if (!chatOpen) {
+          setUnreadCount(prev => prev + 1);
+          setLiveToast(msg);
+          setTimeout(() => setLiveToast(null), 5000);
+        }
+      } else if (event.type === 'TYPING_START') {
+        setTypingUser(event.data.userName);
+      } else if (event.type === 'TYPING_STOP') {
+        setTypingUser(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [id, subscribe, chatOpen]);
+
+  // Reset unread when opening chat
+  useEffect(() => {
+    if (chatOpen) setUnreadCount(0);
+  }, [chatOpen]);
 
   useEffect(() => {
     if (isManualOverride) return;
@@ -216,7 +267,11 @@ const ProjectDetail = () => {
             title="Team Discussion"
           >
             <MessageSquare className="h-5 w-5 group-hover:scale-110 transition-transform" />
-            <span className="absolute top-0 right-0 h-3 w-3 bg-primary-500 border-2 border-main rounded-full"></span>
+            {(unreadCount > 0 || typingUser) && (
+              <span className={`absolute -top-1 -right-1 h-5 min-w-[20px] px-1 bg-primary-500 border-2 border-main rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-lg animate-bounce`}>
+                {typingUser ? '...' : unreadCount}
+              </span>
+            )}
           </button>
           
           <div className="h-10 w-[1px] bg-col mx-2 hidden sm:block"></div>
@@ -330,7 +385,6 @@ const ProjectDetail = () => {
                 </div>
                 <div className="flex flex-col gap-2 w-48">
                   <label className="text-sm font-bold text-sec">Language</label>
-                  {/* Smart Language Badge */}
                   <div className="relative">
                     <button
                       type="button"
@@ -414,13 +468,6 @@ const ProjectDetail = () => {
           </div>
         </div>
       )}
-
-      {/* Project Discussion Side Drawer */}
-      <ProjectChatDrawer 
-        projectId={id}
-        isOpen={chatOpen}
-        onClose={() => setChatOpen(false)}
-      />
     </div>
   );
 };

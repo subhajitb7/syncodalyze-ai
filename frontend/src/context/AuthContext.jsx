@@ -1,14 +1,11 @@
 import { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
-import { io } from 'socket.io-client';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [socket, setSocket] = useState(null);
-
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -31,17 +28,6 @@ export const AuthProvider = ({ children }) => {
     };
     checkAuth();
   }, []);
-
-  useEffect(() => {
-    if (user && !socket) {
-      const s = io('http://localhost:5001');
-      s.emit('join', user._id);
-      setSocket(s);
-    } else if (!user && socket) {
-      socket.disconnect();
-      setSocket(null);
-    }
-  }, [user, socket]);
 
   const login = async (email, password) => {
     try {
@@ -97,7 +83,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, register, logout, loading, socket }}>
+    <AuthContext.Provider value={{ user, setUser, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,90 +1,34 @@
-import { useState, useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { SocketPubSubContext } from '../context/SocketPubSubContext';
 import { 
   X, Send, User, Sparkles, MessageSquare, 
   Trash2, ListTodo, Plus, Info, Clock, CheckCircle2
 } from 'lucide-react';
 
-const ProjectChatDrawer = ({ projectId, isOpen, onClose }) => {
-  const { user, socket } = useContext(AuthContext);
-  const [messages, setMessages] = useState([]);
+const ProjectChatDrawer = ({ projectId, isOpen, onClose, initialMessages: messages, setInitialMessages: setMessages, typingUser }) => {
+  const { user } = useContext(AuthContext);
+  const { emitEvent: emit } = useContext(SocketPubSubContext);
   const [text, setText] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [typingUsers, setTypingUsers] = useState(new Set());
+  const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
   const socketRoom = `project:${projectId}`;
-
-  const fetchMessages = async () => {
-    try {
-      const { data } = await axios.get(`/api/projects/${projectId}/comments`);
-      setMessages(data);
-    } catch (err) {
-      console.error('Failed to fetch messages:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen && projectId) {
-      fetchMessages();
-      if (socket) {
-        socket.emit('joinRoom', socketRoom);
-
-        const handleNewMessage = (msg) => {
-          setMessages(prev => {
-            if (prev.find(m => m._id === msg._id)) return prev;
-            return [...prev, msg];
-          });
-        };
-
-        const handleTyping = ({ userName, roomId }) => {
-          if (roomId === socketRoom) {
-            setTypingUsers(prev => new Set(prev).add(userName));
-          }
-        };
-
-        const handleStopTyping = ({ userName, roomId }) => {
-          if (roomId === socketRoom) {
-            setTypingUsers(prev => {
-              const next = new Set(prev);
-              next.delete(userName);
-              return next;
-            });
-          }
-        };
-
-        socket.on('newComment', handleNewMessage);
-        socket.on('userTyping', handleTyping);
-        socket.on('userStopTyping', handleStopTyping);
-
-        return () => {
-          socket.emit('leaveRoom', socketRoom);
-          socket.off('newComment', handleNewMessage);
-          socket.off('userTyping', handleTyping);
-          socket.off('userStopTyping', handleStopTyping);
-        };
-      }
-    }
-  }, [isOpen, projectId, socket, socketRoom]);
 
   // Auto-scroll to bottom
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, typingUsers]);
+  }, [messages, typingUser]);
 
   const handleTyping = () => {
-    if (!socket) return;
-    socket.emit('typing', { roomId: socketRoom, userName: user.name });
+    emit('typing', { roomId: socketRoom, userName: user.name });
     
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
-      socket.emit('stopTyping', { roomId: socketRoom, userName: user.name });
+      emit('stopTyping', { roomId: socketRoom, userName: user.name });
     }, 2000);
   };
 
@@ -95,7 +39,7 @@ const ProjectChatDrawer = ({ projectId, isOpen, onClose }) => {
     try {
       await axios.post(`/api/projects/${projectId}/comments`, { text: text.trim() });
       setText('');
-      if (socket) socket.emit('stopTyping', { roomId: socketRoom, userName: user.name });
+      emit('stopTyping', { roomId: socketRoom, userName: user.name });
     } catch (err) {
       console.error('Failed to send message:', err);
     }
@@ -185,7 +129,7 @@ const ProjectChatDrawer = ({ projectId, isOpen, onClose }) => {
 
       {/* Footer Area */}
       <div className="p-6 border-t border-col bg-sec/30 backdrop-blur-md">
-        {typingUsers.size > 0 && (
+        {typingUser && (
           <div className="mb-3 px-2 flex items-center gap-2 animate-pulse">
             <div className="flex gap-1">
               <span className="w-1 h-1 bg-primary-500 rounded-full animate-bounce"></span>
@@ -193,7 +137,7 @@ const ProjectChatDrawer = ({ projectId, isOpen, onClose }) => {
               <span className="w-1 h-1 bg-primary-500 rounded-full animate-bounce [animation-delay:0.4s]"></span>
             </div>
             <p className="text-[10px] font-bold text-primary-600 italic">
-              {Array.from(typingUsers).join(', ')} {typingUsers.size === 1 ? 'is' : 'are'} typing...
+              {typingUser} is typing...
             </p>
           </div>
         )}
