@@ -25,13 +25,15 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
 const httpServer = createServer(app);
 
 const allowedOrigins = [
   'http://localhost:5173', 
   'http://localhost:5174', 
   'http://localhost:5175', 
-  'http://localhost:5176'
+  'http://localhost:5176',
+  'http://127.0.0.1:5173'
 ];
 
 // Socket.io
@@ -89,6 +91,18 @@ app.use(cors({ origin: (origin, callback) => callback(null, true), credentials: 
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Global Request Logger
+app.use((req, res, next) => {
+  let token = req.cookies.jwt;
+  const cookieHeader = req.headers.cookie || 'No cookies';
+  console.log(`[AUTH] protect middleware triggered for: ${req.originalUrl} | Token found: ${token ? 'Yes (' + token.substring(0, 10) + '...)' : 'No'}`);
+  console.log(`[REQUEST] ${req.method} ${req.originalUrl} | Cookies: ${cookieHeader}`);
+  res.on('finish', () => {
+    console.log(`[RESPONSE] ${req.method} ${req.originalUrl} - ${res.statusCode}`);
+  });
+  next();
+});
 
 // Routes
 app.use('/api/auth', authRoutes);

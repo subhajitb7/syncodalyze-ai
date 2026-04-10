@@ -58,7 +58,19 @@ const ReviewHistory = () => {
   };
 
   const filteredReviews = reviews.filter(review => {
-    const matchesSearch = review.title?.toLowerCase().includes(searchTerm.toLowerCase());
+    // 1. Exclude future project-linked reviews (explicit fileId)
+    if (review.fileId) return false;
+
+    // 2. Exclude existing project-linked reviews by filename heuristic
+    // (Project files typically have slashes or common extensions)
+    const title = review.title || '';
+    const isProjectFile = title.includes('/') || 
+                          title.includes('\\') || 
+                          /\.(js|jsx|ts|tsx|py|html|css|json|java|cpp|go|rb|php)$/i.test(title);
+    
+    if (isProjectFile) return false;
+
+    const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLang = languageFilter === 'all' || review.language === languageFilter;
     return matchesSearch && matchesLang;
   });

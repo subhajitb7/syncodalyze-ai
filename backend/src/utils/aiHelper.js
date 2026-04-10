@@ -6,7 +6,7 @@ import axios from 'axios';
  * @param {string} userPrompt - The code or query to analyze
  * @param {number} temperature - Creativity/Deterministic control (default 0.2)
  * @param {number} maxTokens - Output limit
- * @returns {Promise<string>} - The AI generated response
+ * @returns {Promise<Object>} - Success object with content and usage
  */
 export const callGroq = async (systemPrompt, userPrompt, temperature = 0.2, maxTokens = 2000) => {
   const groqApiKey = process.env.GROQ_API_KEY;
@@ -17,7 +17,7 @@ export const callGroq = async (systemPrompt, userPrompt, temperature = 0.2, maxT
 
   const startTime = Date.now();
   const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-    model: 'llama-3.3-70b-versatile',
+    model: 'llama-3.1-8b-instant',
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },

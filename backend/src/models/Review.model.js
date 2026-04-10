@@ -33,6 +33,10 @@ const reviewSchema = mongoose.Schema(
       default: 'Pending',
     },
     aiTags: [String],
+    fileId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'CodeFile',
+    },
   },
   {
     timestamps: true,

@@ -1,6 +1,7 @@
 import Review from '../models/Review.model.js';
 import Notification from '../models/Notification.model.js';
 import AiLog from '../models/AiLog.model.js';
+import CodeFile from '../models/CodeFile.model.js';
 import { callGroq } from '../utils/aiHelper.js';
 
 // @desc    Analyze code snippet with AI
@@ -29,35 +30,33 @@ export const analyzeCode = async (req, res) => {
                
                STRUCTURE YOUR RESPONSE AS FOLLOWS:
                
-               # 📑 Technical Review Report
-               
-               ## 📊 Executive Summary
+               ## Overview
                (Standardize as a 2-sentence formal assessment of architecture and risk.)
                
-               ## 📈 Analysis Scorecard
+               ## Analysis Scorecard
                | Metric | Score | Risk Level |
                | :--- | :--- | :--- |
                | Security & Vulnerabilities | X/10 | [High/Mid/Low] |
                | Performance & Efficiency | X/10 | [High/Mid/Low] |
                | Maintainability & Style | X/10 | [High/Mid/Low] |
                
-               ## 🛡️ Security & Integrity
+               ## Security & Integrity
                (Detail unsafe operations, potential leaks, or vulnerabilities. Use technical documentation references.)
                
-               ## 🛠️ Technical Findings
+               ## Technical Findings
                | Line Range | Finding | Impact | Actionable Mitigation |
                | :--- | :--- | :--- | :--- |
                | [Lx-Ly] | Brief technical description | [High/Low] | Specific code refactor suggestion |
                
-               ## 🚀 Performance Benchmarks
+               ## Performance Benchmarks
                (Identify complexity issues, memory management, or execution bottlenecks.)
                
-               ## 🧱 Architectural Recommendations
+               ## Architectural Recommendations
                (High-level suggestions for improved design patterns or scalability.)
                
                ---
                
-               ### 🏆 OVERALL RATING: X/10
+               ### OVERALL RATING: X/10
                
                STRICT ANALYTICAL RULES:
                - Use a formal, objective technical tone. No conversational filler.
@@ -76,9 +75,9 @@ export const analyzeCode = async (req, res) => {
     if (!aiFeedback) {
       return res.status(500).json({ message: 'Failed to communicate with AI service' });
     }
-    
+
     sendProgress('Generating suggestions...');
-    
+
     const tokensUsed = usage?.total_tokens || 0;
     const saveToHistory = req.body.saveToHistory !== false;
 
@@ -114,6 +113,7 @@ export const analyzeCode = async (req, res) => {
         aiFeedback: finalFeedback,
         bugsFound,
         aiTags,
+        fileId: req.body.fileId || null,
       });
 
       // Link to file version if fileId is provided
@@ -184,8 +184,21 @@ export const analyzeCode = async (req, res) => {
 
     res.status(saveToHistory ? 201 : 200).json(review);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error during analysis' });
+    console.error('ANALYSIS_CRASH:', error);
+
+    // Specific Handling for Rate Limits (Error 429)
+    if (error.response?.status === 429) {
+      return res.status(429).json({
+        message: 'AI Capacity Reached. Please wait 60 seconds and try again.',
+        debug: 'Groq API Rate Limit'
+      });
+    }
+
+    res.status(500).json({
+      message: 'Server error during analysis',
+      debug: error.message,
+      stack: error.stack
+    });
   }
 };
 
@@ -224,12 +237,15 @@ export const getReviewById = async (req, res) => {
 export const getReviewStats = async (req, res) => {
   try {
     const userId = req.user._id;
-    const totalReviews = await Review.countDocuments({ user: userId });
+    // Only count ad-hoc (scratchpad) reviews for dashboard stats
+    const filter = { user: userId, fileId: { $exists: false } };
+    
+    const totalReviews = await Review.countDocuments(filter);
     const bugsAgg = await Review.aggregate([
-      { $match: { user: userId } },
+      { $match: { user: userId, fileId: { $exists: false } } },
       { $group: { _id: null, totalBugs: { $sum: '$bugsFound' } } },
     ]);
-    const cleanReviews = await Review.countDocuments({ user: userId, bugsFound: 0 });
+    const cleanReviews = await Review.countDocuments({ ...filter, bugsFound: 0 });
     const cleanPercent = totalReviews > 0 ? Math.round((cleanReviews / totalReviews) * 100) : 100;
 
     res.json({
@@ -285,7 +301,7 @@ export const chatWithAi = async (req, res) => {
   try {
     const systemPrompt = 'You are an elite Full-Stack Coding Mentor. Provide precise, technically dense assistance. Use modern best practices, provide high-quality snippets, and eliminate conversational filler. Format your responses in clean Markdown.';
     const { content: reply } = await callGroq(systemPrompt, messages.map(m => `[${m.role.toUpperCase()}]: ${m.content}`).join('\n'), 0.7, 1024);
-    
+
     res.json({ reply });
   } catch (error) {
     console.error(error);

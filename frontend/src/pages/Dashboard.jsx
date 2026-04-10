@@ -54,6 +54,9 @@ const Dashboard = () => {
 
 
   const filteredReviews = reviews.filter((r) => {
+    // Exclude project-linked reviews from Dashboard "Code Insights"
+    if (r.fileId) return false;
+    
     if (filter === 'bugs') return r.bugsFound > 0;
     if (filter === 'clean') return r.bugsFound === 0;
     return true;
@@ -84,10 +87,10 @@ const Dashboard = () => {
           <Link to="/new-review" className="btn-primary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold shadow-lg shadow-primary-500/10">
             <Plus className="h-3.5 w-3.5" /> Quick Code
           </Link>
-          <Link to="/new-review" className="btn-secondary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold border-col">
+          <Link to="/new-review?upload=true" className="btn-secondary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold border-col">
             <Upload className="h-3.5 w-3.5" /> Upload File
           </Link>
-          <Link to="/projects" className="btn-secondary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold border-col">
+          <Link to="/projects?create=true" className="btn-secondary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold border-col">
             <GithubIcon className="h-3.5 w-3.5" /> Repository
           </Link>
         </div>

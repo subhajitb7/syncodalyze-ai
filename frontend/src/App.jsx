@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { SocketPubSubProvider } from './context/SocketPubSubContext';
@@ -27,7 +27,7 @@ import AiChatFloating from './components/AiChatFloating';
 import Footer from './components/Footer';
 
 import axios from 'axios';
-const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:5005' : `http://${window.location.hostname}:5005`;
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:5007' : `http://${window.location.hostname}:5006`;
 axios.defaults.baseURL = API_URL;
 axios.defaults.withCredentials = true;
 
@@ -83,6 +83,12 @@ function AppContent() {
 }
 
 function App() {
+  useEffect(() => {
+    if (window.location.hostname === 'localhost') {
+      window.location.href = window.location.href.replace('localhost', '127.0.0.1');
+    }
+  }, []);
+
   return (
     <ThemeProvider>
       <AuthProvider>

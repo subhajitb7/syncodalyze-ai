@@ -49,14 +49,14 @@ const ConfirmModal = ({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="relative w-full max-w-md bg-[#111] border border-white/10 rounded-2xl p-8 shadow-2xl overflow-hidden"
+            className="relative w-full max-w-md bg-sec border border-col rounded-2xl p-8 shadow-2xl overflow-hidden"
           >
             {/* Glossy overlay effect */}
             <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-primary-500/5 blur-[80px] rounded-full pointer-events-none" />
             
             <button 
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 text-sec hover:text-main hover:bg-white/5 rounded-lg transition-all"
+              className="absolute top-4 right-4 p-2 text-sec hover:text-main hover:bg-ter rounded-lg transition-all"
             >
               <FiX className="w-5 h-5" />
             </button>
@@ -71,7 +71,7 @@ const ConfirmModal = ({
               <div className="flex flex-col sm:flex-row gap-3 w-full mt-2">
                 <button 
                   onClick={onClose}
-                  className="flex-1 px-6 h-12 rounded-xl text-sm font-bold border border-white/5 bg-white/5 text-sec hover:bg-white/10 hover:text-main transition-all"
+                  className="btn-secondary flex-1 h-12 text-sm font-bold"
                 >
                   {cancelText}
                 </button>

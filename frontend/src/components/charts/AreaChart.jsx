@@ -36,7 +36,7 @@ const AreaChart = ({ data, color = "#3b82f6", gradientId = "colorPv" }) => {
   const dotStroke = theme === 'dark' ? '#000' : '#f8fafc';
   return (
     <div className="w-full h-80">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minHeight={320} debounce={50}>
         <ReAreaChart
           data={data}
           margin={{ top: 10, right: 10, left: -20, bottom: 0 }}

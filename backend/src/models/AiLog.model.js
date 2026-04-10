@@ -42,6 +42,10 @@ const aiLogSchema = mongoose.Schema(
     errorMessage: {
       type: String,
     },
+    isTemporary: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

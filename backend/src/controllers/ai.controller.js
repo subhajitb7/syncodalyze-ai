@@ -38,6 +38,29 @@ export const summarizeFile = async (req, res) => {
   }
 };
 
+// @desc    Summarize a raw code snippet (Stateless)
+// @route   POST /api/ai/summarize-snippet
+export const summarizeSnippet = async (req, res) => {
+  const { codeSnippet, language, title } = req.body;
+  
+  if (!codeSnippet) {
+    return res.status(400).json({ message: 'Code snippet is required' });
+  }
+
+  try {
+    const prompt = `Summarize the logic and purpose of the following code in exactly 3 concise bullet points. Be technical but understandable.\n\nTitle: ${title || 'Snippet'}\nCode:\n\`\`\`${language || ''}\n${codeSnippet}\n\`\`\``;
+    const systemPrompt = 'You are an elite Technical Architect. Summarize code logic with extreme precision and technical density. No conversational filler.';
+    
+    // We use the same Groq helper
+    const { content: summary } = await callGroq(systemPrompt, prompt, 0.3, 500);
+
+    res.json({ summary });
+  } catch (error) {
+    console.error('Snippet Summary Error:', error);
+    res.status(500).json({ message: 'Failed to generate summary' });
+  }
+};
+
 // @desc    Get AI personalized insights for a developer
 // @route   GET /api/ai/insights
 export const getDeveloperInsights = async (req, res) => {

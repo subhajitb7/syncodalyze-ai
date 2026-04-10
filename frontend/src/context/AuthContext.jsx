@@ -12,16 +12,28 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data } = await axios.get('/api/auth/profile');
+        console.info(`[AUTH] checkAuth pulse: fetching profile from ${axios.defaults.baseURL}/api/auth/profile | withCredentials: ${axios.defaults.withCredentials}`);
+        const { data } = await axios.get('/api/auth/profile?t=' + Date.now());
         setUser(data);
         localStorage.setItem('userInfo', JSON.stringify(data));
+        console.info('[AUTH] Session verified successfully.');
       } catch (error) {
-        // Only clear if we actually tried and failed with a 401
-        if (error.response?.status === 401 || error.response?.status === 404) {
-          setUser(null);
-          localStorage.removeItem('userInfo');
+        // Handle 401 specifically: Clear state ONLY if the error is definitive
+        if (error.response?.status === 401) {
+          console.warn('[AUTH] No active session found. Clearing user state.');
+          // ONLY clear if we don't already have a valid user object from a manual login action
+          // mapping the state check inside a setter to get the latest value
+          setUser(prev => {
+            if (prev) {
+              console.log('[AUTH] Shield active: Blocking pulse from clearing existing manual session.');
+              return prev;
+            }
+            localStorage.removeItem('userInfo');
+            return null;
+          });
         } else {
-          // If server is down/error, fallback to local storage if it exists
+          console.error(`[AUTH] Profile check failed: ${error.message}`);
+          // Fallback to local storage if it's just a network glitch
           const userInfo = localStorage.getItem('userInfo');
           if (userInfo) setUser(JSON.parse(userInfo));
         }
@@ -34,6 +46,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+      console.info(`[AUTH] Attempting login for ${email}...`);
       const { data } = await axios.post('/api/auth/login', { email, password });
       if (data.needsVerification) {
         return { success: false, needsVerification: true, email: data.email, message: data.message };
@@ -46,6 +59,7 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       const resp = error.response?.data;
+      console.warn(`[AUTH] Login attempt rejected: ${resp?.message || error.message}`, resp);
       if (resp?.needsVerification) {
         return { success: false, needsVerification: true, email: resp.email, message: resp.message };
       }

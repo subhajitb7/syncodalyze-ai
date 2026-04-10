@@ -33,6 +33,11 @@ html, body {
   scrollbar-gutter: stable;
 }
 
+/* Hide scrollbar for Chrome, Safari and Opera */
+::-webkit-scrollbar {
+  display: none;
+}
+
 .light {
   --bg-main: #f8fafc;
   --bg-sec: #ffffff;

@@ -92,9 +92,7 @@ const Analytics = () => {
           {data.reviewsOverTime.length === 0 ? (
             <p className="text-sec text-sm text-center py-20">No data yet</p>
           ) : (
-            <div className="h-64">
-              <AreaChart data={data.reviewsOverTime} color="#6366f1" gradientId="reviewsArea" />
-            </div>
+            <AreaChart data={data.reviewsOverTime} color="#6366f1" gradientId="reviewsArea" />
           )}
         </div>
 
@@ -106,9 +104,7 @@ const Analytics = () => {
           {data.byLanguage.length === 0 ? (
             <p className="text-sec text-sm text-center py-20">No data yet</p>
           ) : (
-            <div className="h-64">
-              <BarChart data={data.byLanguage} />
-            </div>
+            <BarChart data={data.byLanguage} />
           )}
         </div>
       </div>

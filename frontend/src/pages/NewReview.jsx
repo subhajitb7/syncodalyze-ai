@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import hljs from 'highlight.js';
@@ -10,7 +10,7 @@ import python from 'react-syntax-highlighter/dist/esm/languages/prism/python';
 import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
 import { vscDarkPlus, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { ThemeContext } from '../context/ThemeContext';
-import { AlertTriangle, CheckCircle, Loader2, Code, Sparkles, ChevronDown, ZapOff } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Loader2, Code, Sparkles, ChevronDown, ZapOff, FileCode, Upload } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 
 SyntaxHighlighter.registerLanguage('jsx', jsx);
@@ -36,6 +36,9 @@ const NewReview = () => {
   const { socket } = useContext(AuthContext);
   const [aiProgressText, setAiProgressText] = useState('Uploading code snippet for AI processing...');
   const [saveHistory, setSaveHistory] = useState(true);
+  const [summarizing, setSummarizing] = useState(false);
+  const [summary, setSummary] = useState('');
+  const fileInputRef = useRef(null);
 
   const languages = [
     { id: 'javascript', name: 'JavaScript / React' },
@@ -150,6 +153,62 @@ const NewReview = () => {
     }
   };
 
+  const handleSummarize = async () => {
+    if (!codeSnippet.trim()) return;
+    setSummarizing(true);
+    setSummary('');
+    try {
+      const { data } = await axios.post('/api/ai/summarize-snippet', {
+        title: title || 'Untitled Snippet',
+        codeSnippet,
+        language,
+      });
+      setSummary(data.summary);
+    } catch (err) {
+      console.error('Summary Error:', err);
+    } finally {
+      setSummarizing(false);
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setTitle(file.name.split('.')[0]);
+    setIsManualOverride(false);
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setCodeSnippet(ev.target.result);
+      
+      // Auto-detect language based on extension
+      const ext = file.name.split('.').pop().toLowerCase();
+      const langMap = {
+        js: 'javascript', jsx: 'javascript', ts: 'typescript', tsx: 'typescript',
+        py: 'python', java: 'java', cpp: 'cpp', c: 'cpp', go: 'go',
+        rb: 'ruby', php: 'php', rs: 'rust', kt: 'kotlin', swift: 'swift',
+        cs: 'csharp', sql: 'sql', sh: 'shell', bash: 'shell',
+        dart: 'dart', scala: 'scala'
+      };
+      if (langMap[ext]) {
+        setLanguage(langMap[ext]);
+        setIsManualOverride(true);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Auto-trigger upload if requested from Dashboard
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('upload') === 'true' && fileInputRef.current) {
+      fileInputRef.current.click();
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   const currentLangName = languages.find(l => l.id === language)?.name || language;
 
   return (
@@ -160,6 +219,7 @@ const NewReview = () => {
           <p className="text-[10px] sm:text-xs font-bold text-amber-500 uppercase tracking-widest">Temporary Mode is ON — <span className="font-medium text-sec lowercase tracking-normal normal-case">Reviews will not be stored in your history.</span></p>
         </div>
       )}
+
       <div className="border-b border-col bg-sec p-4 shadow-sm relative z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
           <div className="flex w-full sm:w-auto items-center gap-4 flex-1">
@@ -241,6 +301,32 @@ const NewReview = () => {
               </button>
             </div>
 
+            <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="btn-secondary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold border-col hover:border-primary-500/30 transition-all"
+              >
+                <Upload className="h-3.5 w-3.5" /> Load File
+              </button>
+
+            <button
+                onClick={handleSummarize}
+                disabled={summarizing || !codeSnippet.trim()}
+                className="btn-primary flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed font-bold shadow-lg shadow-primary-500/10"
+              >
+                {summarizing ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Summarizing...</>
+                ) : (
+                  <><FileCode className="h-4 w-4" /> AI Summary</>
+                )}
+              </button>
+
             <button
               onClick={handleSubmit}
               disabled={loading || !codeSnippet.trim()}
@@ -256,9 +342,29 @@ const NewReview = () => {
         </div>
       </div>
 
+      {/* AI Summary Banner - Positioned below button bar */}
+      {summary && (
+        <div className="bg-purple-500/10 border-b border-purple-500/20 p-6 animate-in slide-in-from-top-2 duration-300">
+           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-6 items-start">
+              <div className="h-10 w-10 bg-purple-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/30">
+                <FileCode className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1">
+                 <h4 className="text-sm font-black text-purple-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                   Snippet Logic Overview
+                   <button onClick={() => setSummary('')} className="ml-auto text-sec hover:text-main text-xs normal-case font-bold">Dismiss</button>
+                 </h4>
+                 <div className="text-sm text-main font-medium leading-relaxed ai-feedback-content">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{summary}</ReactMarkdown>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
+
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left Side - Editor */}
-        <div className={`flex-1 flex flex-col ${result ? 'lg:w-1/2 border-r border-col' : 'w-full'} transition-all`}>
+        <div className={`flex-1 flex flex-col ${(result || loading || error) ? 'lg:w-1/2 border-r border-col' : 'w-full'} transition-all`}>
           <div className="bg-sec border-b border-col px-4 py-2 flex justify-between items-center">
             <div className="flex items-center gap-2 text-sm text-sec font-bold uppercase tracking-wider">
               <Code className="h-4 w-4" />

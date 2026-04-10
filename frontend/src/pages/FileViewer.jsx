@@ -155,11 +155,11 @@ const FileViewer = () => {
                 <button onClick={() => setIsEditing(true)} className="btn-secondary border-primary-500/30 text-primary-600 flex items-center gap-2 text-sm font-bold">
                    Edit File
                 </button>
-                <button onClick={handleReview} disabled={reviewing} className="btn-primary flex items-center gap-2 text-sm disabled:opacity-50 font-bold shadow-lg shadow-emerald-500/10">
-                  {reviewing ? <><Loader2 className="h-4 w-4 animate-spin" /> Reviewing...</> : <><Sparkles className="h-4 w-4" /> AI Review</>}
-                </button>
-                <button onClick={handleSummarize} disabled={summarizing} className="btn-primary bg-purple-600 border-purple-700 hover:bg-purple-700 flex items-center gap-2 text-sm disabled:opacity-50 font-bold shadow-lg shadow-purple-500/10">
+                <button onClick={handleSummarize} disabled={summarizing} className="btn-primary flex items-center gap-2 text-sm disabled:opacity-50 font-bold shadow-lg shadow-primary-500/10">
                   {summarizing ? <><Loader2 className="h-4 w-4 animate-spin" /> Summarizing...</> : <><FileCode className="h-4 w-4" /> AI Summary</>}
+                </button>
+                <button onClick={handleReview} disabled={reviewing} className="btn-primary flex items-center gap-2 text-sm disabled:opacity-50 font-bold shadow-lg shadow-primary-500/10">
+                  {reviewing ? <><Loader2 className="h-4 w-4 animate-spin" /> Analyzing...</> : <><Sparkles className="h-4 w-4" /> Analyze Code</>}
                 </button>
               </>
             ) : (

@@ -5,8 +5,8 @@ import { sendOtpEmail } from '../utils/sendEmail.js';
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 const validatePassword = (password) => {
-  // 6-8 characters, at least one uppercase, one lowercase, one number and one special character
-  const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,8}$/;
+  // At least 6 characters, at least one uppercase, one lowercase, one number and one special character
+  const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
   return regex.test(password);
 };
 
@@ -17,9 +17,22 @@ export const authUser = async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
 
-    if (!user || !(await user.matchPassword(password))) {
+    if (!user) {
+      console.warn(`[AUTH] REJECTED: User not found for email: ${email}`);
       return res.status(401).json({ message: 'Invalid email or password' });
     }
+
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      console.warn(`[AUTH] REJECTED: Password mismatch for user: ${email}`);
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    if (!validatePassword(password)) {
+      console.warn(`[AUTH] PASS-WARNING: Valid password used but format is legacy for: ${email}`);
+    }
+
+    console.info(`[AUTH] SUCCESS: Credentials verified for: ${email}. Triggering 2FA flow...`);
 
     if (!user.isVerified) {
       // Resend OTP and tell frontend to redirect
@@ -50,14 +63,6 @@ export const authUser = async (req, res) => {
       message: 'Two-factor authentication required',
       requires2fa: true,
       email: user.email,
-    });
-
-    generateToken(res, user._id);
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
     });
   } catch (error) {
     console.error(error);

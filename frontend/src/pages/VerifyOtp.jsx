@@ -17,7 +17,9 @@ const VerifyOtp = () => {
   const type = location.state?.type; // '2fa' or undefined (registration)
 
   useEffect(() => {
-    if (!email) navigate('/auth');
+    if (!email) {
+      navigate('/auth');
+    }
   }, [email, navigate]);
 
   useEffect(() => {
@@ -66,7 +68,10 @@ const VerifyOtp = () => {
         navigate('/security-update');
       } else {
         setUser(data);
-        navigate('/dashboard'); 
+        // Handshake Delay: Increased to allow background pulse to resolve/shield
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1000);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Verification failed');

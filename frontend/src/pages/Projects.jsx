@@ -28,6 +28,16 @@ const Projects = () => {
 
   useEffect(() => { fetchProjects(); }, []);
 
+  // Handle auto-open of modal from Dashboard "Upload File"
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('create') === 'true') {
+      setShowModal(true);
+      // Clean up the URL to keep it pretty
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
