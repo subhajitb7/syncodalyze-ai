@@ -18,6 +18,7 @@ import searchRoutes from './routes/search.routes.js';
 import ailogRoutes from './routes/ailog.routes.js';
 import teamRoutes from './routes/team.routes.js';
 import aiRoutes from './routes/ai.routes.js';
+import messageRoutes from './routes/message.routes.js';
 
 dotenv.config();
 
@@ -102,9 +103,10 @@ app.use('/api/search', searchRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/ai-logs', ailogRoutes);
 app.use('/api/teams', teamRoutes);
+app.use('/api/messages', messageRoutes);
 
 app.get('/', (req, res) => {
-  res.send('AI Code Review Platform API is running...');
+  res.send('Syncodalyze AI Platform API is running...');
 });
 
 // Error Handling

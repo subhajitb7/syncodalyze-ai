@@ -274,7 +274,7 @@ const FileViewer = () => {
                   }
                 }}
               >
-                {(reviewResult.aiFeedback || '').replace(/^#+\s*(Code Review|AI Code Review).*\n/i, '')}
+                {(reviewResult.aiFeedback || '').replace(/^#+\s*(Code Review|AI Code Review|Syncodalyze AI).*\n/i, '')}
               </ReactMarkdown>
             </div>
           </div>

@@ -53,7 +53,7 @@ const AuthPage = () => {
           {isLogin ? 'Welcome Back' : 'Create an Account'}
         </h2>
         <p className="text-sec font-medium text-center mb-8">
-          {isLogin ? 'Sign in to continue to AICodeReview' : 'Get started with AI code reviews today'}
+          {isLogin ? 'Sign in to continue to Syncodalyze AI' : 'Get started with Syncodalyze AI today'}
         </p>
 
         {error && (

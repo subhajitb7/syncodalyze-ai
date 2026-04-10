@@ -143,7 +143,7 @@ const ReviewDetail = () => {
                   }
                 }}
               >
-                {(review.aiFeedback || 'No feedback.').replace(/^#+\s*(Code Review|AI Code Review).*\n/i, '')}
+                {(review.aiFeedback || 'No feedback.').replace(/^#+\s*(Code Review|AI Code Review|Syncodalyze AI).*\n/i, '')}
               </ReactMarkdown>
             </div>
           </div>

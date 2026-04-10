@@ -2,8 +2,8 @@ import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { ArrowLeft, Users, Plus, Trash2, Crown, ShieldCheck, User as UserIcon, FolderOpen, X, UserPlus, MessageCircle } from 'lucide-react';
-import CommentSection from '../components/CommentSection';
+import { ArrowLeft, Users, Plus, Trash2, Crown, ShieldCheck, User as UserIcon, FolderOpen, X, UserPlus, MessageSquare } from 'lucide-react';
+import TeamChat from '../components/TeamChat';
 import { SocketPubSubContext } from '../context/SocketPubSubContext';
 
 const TeamDetail = () => {
@@ -204,14 +204,14 @@ const TeamDetail = () => {
         <div className="lg:col-span-1">
           <div className="glass-panel p-6 h-full border-col/50">
             <h3 className="text-xl font-bold text-main mb-6 flex items-center gap-3">
-              <MessageCircle className="h-5 w-5 text-primary-500" />
-              Team Hub
+              <MessageSquare className="h-5 w-5 text-primary-500" />
+              Discussion
             </h3>
-            <CommentSection
-              teamId={id}
-              placeholder="Write message..."
-              emptyMessage="No discussions yet. Start the conversation!"
-              userRole={myRole}
+            <TeamChat 
+               teamId={id} 
+               placeholder="Share ideas with the team..."
+               emptyMessage="The team hub is empty. Send the first message!"
+               userRole={myRole}
             />
           </div>
         </div>

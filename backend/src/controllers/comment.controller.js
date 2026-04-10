@@ -26,7 +26,6 @@ export const addComment = async (req, res) => {
 
     if (reviewId) commentData.review = reviewId;
     else if (projectId) commentData.project = projectId;
-    else if (teamId) commentData.team = teamId;
 
     const comment = await Comment.create(commentData);
     const populated = await Comment.findById(comment._id).populate('user', 'name email');
@@ -38,7 +37,6 @@ export const addComment = async (req, res) => {
     let room = '';
     if (reviewId) room = `review:${reviewId}`;
     else if (projectId) room = `project:${projectId}`;
-    else if (teamId) room = `team:${teamId}`;
     
     if (io) io.to(room).emit('newComment', populated);
 
@@ -154,20 +152,7 @@ export const updateComment = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-// @desc    Get comments for a team
-// @route   GET /api/teams/:teamId/comments
-// @access  Private
-export const getCommentsByTeam = async (req, res) => {
-  try {
-    const comments = await Comment.find({ team: req.params.teamId })
-      .populate('user', 'name email')
-      .sort({ createdAt: 1 });
-    res.json(comments);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+// ... Review and Project comment controllers remain ...
 // @desc    Get comments for a project
 // @route   GET /api/projects/:projectId/comments
 // @access  Private

@@ -8,7 +8,6 @@ import { SocketPubSubContext } from '../context/SocketPubSubContext';
 const CommentSection = ({
   reviewId,
   projectId,
-  teamId,
   title = "Discussion",
   placeholder,
   emptyMessage,
@@ -28,9 +27,9 @@ const CommentSection = ({
     if (transcript) setText(transcript);
   }, [transcript]);
 
-  const contextId = reviewId || projectId || teamId;
-  const contextType = teamId ? 'teams' : reviewId ? 'reviews' : 'projects';
-  const socketRoom = teamId ? `team:${teamId}` : reviewId ? `review:${reviewId}` : `project:${projectId}`;
+  const contextId = reviewId || projectId;
+  const contextType = reviewId ? 'reviews' : 'projects';
+  const socketRoom = reviewId ? `review:${reviewId}` : `project:${projectId}`;
 
   const fetchComments = async () => {
     try {

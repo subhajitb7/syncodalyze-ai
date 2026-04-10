@@ -63,8 +63,8 @@ const Dashboard = () => {
     if (!text) return 'No feedback content.';
     // Remove headers, bold/italic markers, and code block symbols
     let cleanText = text
-      .replace(/^#+\s*(Code Review|AI Code Review).*\n/i, '')
-      .replace(/^(Code Review|AI Code Review|Overview:|Here is an overview:?)\s*/i, '')
+      .replace(/^#+\s*(Code Review|AI Code Review|Syncodalyze AI).*\n/i, '')
+      .replace(/^(Code Review|AI Code Review|Syncodalyze AI|Overview:|Here is an overview:?)\s*/i, '')
       .replace(/[#*_~`>]/g, '')
       .replace(/\[(.*?)\]\(.*?\)/g, '$1')
       .replace(/\s+/g, ' ');

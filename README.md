@@ -1,10 +1,10 @@
-# AI Code Review — Automated Multi-Layered Intelligence
+# Syncodalyze AI — The Specialized Synchronization Platform
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/lucide-react/lucide/main/icons/sparkles.svg" width="60" height="60" alt="Intelligence Logo" />
+  <img src="https://raw.githubusercontent.com/lucide-react/lucide/main/icons/sparkles.svg" width="60" height="60" alt="Syncodalyze Logo" />
 </p>
 
-**AI Code Review** is a high-performance, premium ecosystem designed to transform the way developers manage and analyze their source code. Built with the MERN stack and powered by state-of-the-art AI, the platform offers a "Command Center" experience that combines deep analysis, seamless collaboration, and industry-grade security.
+**Syncodalyze AI** is a high-performance, premium ecosystem designed to synchronize AI-powered code intelligence with real-time team collaboration. Built with a specialized, decoupled architecture on the MERN stack, the platform provides a professional "Command Center" for modern development teams.
 
 ---
 
@@ -13,32 +13,30 @@
 Our core analysis hub provides more than just linting; it delivers autonomous, multi-layered intelligence for your code.
 
 - **🚀 Smart Language Badge**: Instantly identifies over **20+ tech stacks** (Rust, Go, Python, Swift, etc.) via file extensions and AI-powered content analysis.
-- **⚡ Quick Mode (Unsaved Sessions)**: Perform rapid AI analysis without saving to history. Ideal for throwaway snippets and one-time code checks.
-- **✨ Zero-Click AI Analysis**: Real-time logic error detection, security vulnerability identification, and performance optimization tips.
-- **🧩 Monaco-Powered Editor**: A high-performance, browser-based coding environment with full syntax highlighting and responsive styling.
-- **📈 Historical Versioning**: Every review is versioned (v1, v2, etc.), allowing you to track code improvements and AI feedback cycles over time.
+- **✨ Context-Aware Parsing**: Intelligent logic that automatically strips brand headers and metadata from AI feedback for a clean, professional UI presentation.
+- **📈 Historical Versioning**: Every review is versioned (v1, v2, etc.), allowing teams to track code improvements and AI feedback cycles over time.
+- **🧩 Monaco-Powered Editor**: A high-performance coding environment with full syntax highlighting and responsive styling.
 
 ---
 
-## 🏗️ The Command Center
+## 👥 The Specialized Collaboration Hub
 
-A high-efficiency, 70/30 split dashboard minimizes cognitive load and puts your most important actions front and center.
+We have implemented a specialized, context-aware messaging architecture that separates technical documentation from team coordination.
 
-- **📍 Quick-Action Header**: Instant access to Paste-Code, Upload-File, and Repository-Sync directly from your dashboard's global header.
-- **📂 Project Management Hub**: Organize complex codebases into logical projects with automated repository mapping and remote sync capabilities.
-- **👥 Team Collaboration**: Form elite dev teams, manage member access, and collaborate on project workspaces in real-time.
-- **🔍 Context-Aware Search**: A premium, expandable search interface accessible globally via `/` or `CMD + K` (optimized for Dashboard, Projects, and Teams).
+- **📬 Decoupled Messaging**: An isolated system where **Project Comments** serve as technical documentation, while the **Team Chat** handles high-speed collaboration.
+- **🎙️ Voice-to-Text Interface**: Real-time microphone integration in Team Chat with instant transcription for hands-free developer coordination.
+- **💬 Professional Messaging UI**: High-fidelity, bubble-based chat system with dynamic alignment (Self: Right/Primary, Others: Left/Glass-Translucent).
+- **🔄 Real-Time Synchronization**: Powered by Socket.io, enabling instant communication and live analysis progress across the entire team.
 
 ---
 
 ## 🛡️ The Security Vault
 
-Security isn't a feature; it's our foundation. The platform is hardened with multiple layers of proactive protection.
+Security is the foundation of **Syncodalyze AI**. The platform is hardened with multiple layers of proactive protection.
 
 - **🔐 Mandatory 2FA**: All user sessions are protected by mandatory Email OTP (One-Time Password) verification at login.
-- **🔑 Secure OTP Reset**: Industry-grade password rotation flows mediated by secure, time-sensitive token verification.
-- **🛡️ Role-Based Access (RBAC)**: Granular control with distinct Admin and Member tiers. Admins gain exclusive access to platform-wide statistics and management hubs.
-- **✨ Security Hub**: A dedicated Profile management center for renaming, credential rotation, and session monitoring.
+- **🛡️ Role-Based Access (RBAC)**: Granular control with distinct Admin and Member tiers for secure team and project management.
+- **🔑 Secure Session Management**: Industry-grade password rotation and credential monitoring via the dedicated Security Hub.
 
 ---
 
@@ -46,12 +44,11 @@ Security isn't a feature; it's our foundation. The platform is hardened with mul
 
 | Ecosystem | Technologies |
 | :--- | :--- |
-| **Frontend** | React (Vite), Tailwind CSS, Lucide Icons, Glassmorphism UX |
-| **Backend** | Node.js, Express.js |
+| **Frontend** | React (Vite), Tailwind CSS, Socket.io-client, Lucide Icons |
+| **Backend** | Node.js, Express.js, Socket.io |
 | **Persistence** | MongoDB Atlas (Mongoose ODM) |
 | **AI Layer** | Groq AI (Llama 3.3-70b-versatile) |
-| **Real-Time** | Socket.io (Analysis Progress & Collaborative Events) |
-| **Security** | JWT, Email OTP, Bcrypt Hashing |
+| **Real-Time** | Specialized Message Model & Socket Events |
 
 ---
 
@@ -60,7 +57,7 @@ Security isn't a feature; it's our foundation. The platform is hardened with mul
 ### 1. Prerequisites
 - **Node.js** (v18+)
 - **MongoDB Atlas** account
-- **Groq AI** API Key (for analysis engine)
+- **Groq AI** API Key
 - **SMTP Server** (Gmail or choice provider for OTP delivery)
 
 ### 2. Backend Environment Setup (`backend/.env`)
@@ -77,17 +74,17 @@ FRONTEND_URL=http://localhost:5173
 ### 3. Execution Launch
 ```bash
 # Clone the repository
-git clone https://github.com/subhajitb7/ai-code-review.git
-cd ai-code-review
+git clone https://github.com/subhajitb7/syncodalyze-ai.git
+cd syncodalyze-ai
 
 # Launch Backend
 cd backend && npm install && npm run dev
 
-# Launch Frontend (New Terminal)
+# Launch Frontend
 cd frontend && npm install && npm run dev
 ```
 
 ---
 
 ### **Maintainer — SUBHAJIT BAG**
-*Built with precision for the next generation of software analysis.*
+*Built with precision for the next generation of software synchronization.*

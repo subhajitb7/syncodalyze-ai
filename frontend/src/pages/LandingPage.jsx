@@ -78,7 +78,7 @@ const LandingPage = () => {
       <footer className="w-full mt-32 border-t border-col bg-sec/10 backdrop-blur-md z-10 pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           <div className="space-y-4">
-            <h2 className="text-xl font-black tracking-tighter text-main">AI<span className="text-primary-500">CodeReview</span></h2>
+            <h2 className="text-xl font-black tracking-tighter text-main">Syncodalyze <span className="text-primary-500">AI</span></h2>
             <p className="text-sm text-sec font-medium leading-relaxed">
               Supercharging the world's codebase with intelligent AI analysis and real-time security insights.
             </p>
@@ -128,7 +128,7 @@ const LandingPage = () => {
 
         <div className="max-w-7xl mx-auto px-6 pt-8 border-t border-col flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-sec font-bold">
-            © 2026 AI Code Review. All rights reserved.
+            © 2026 Syncodalyze AI. All rights reserved.
           </p>
           <p className="text-[10px] text-sec uppercase tracking-[0.2em] font-black opacity-30">
             Crafted with passion for developers

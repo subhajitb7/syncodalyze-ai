@@ -5,7 +5,7 @@ const Footer = () => {
     <footer className="border-t border-col bg-sec p-4 mt-auto">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] sm:text-xs">
         <div className="flex items-center gap-4">
-          <p className="text-sec font-bold uppercase tracking-widest">&copy; {new Date().getFullYear()} AI-Code-Review</p>
+          <p className="text-sec font-bold uppercase tracking-widest">&copy; {new Date().getFullYear()} Syncodalyze AI</p>
           <span className="h-1 w-1 bg-col rounded-full hidden sm:block"></span>
           <p className="text-sec font-medium">Built with <Heart className="h-3 w-3 inline text-rose-500 animate-pulse" /> for Developers</p>
         </div>

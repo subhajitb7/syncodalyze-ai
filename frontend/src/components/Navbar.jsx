@@ -77,7 +77,7 @@ const Navbar = () => {
                 <Code2 className="h-5 w-5 text-white" />
               </div>
               <span className='text-2xl font-bold'>
-                AICodeReview
+                Syncodalyze AI
               </span>
             </Link>
 

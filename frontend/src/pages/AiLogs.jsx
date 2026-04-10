@@ -40,7 +40,7 @@ const AiLogs = () => {
         <h1 className="text-3xl font-bold flex items-center gap-3 text-main">
           <Brain className="h-8 w-8 text-purple-600" /> AI Usage Logs
         </h1>
-        <p className="text-sec mt-1 font-medium">Track your AI code review history and usage metrics.</p>
+        <p className="text-sec mt-1 font-medium">Track your Syncodalyze AI history and usage metrics.</p>
       </div>
 
       {/* Stats */}

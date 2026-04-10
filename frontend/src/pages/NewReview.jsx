@@ -346,7 +346,7 @@ const NewReview = () => {
                         }
                       }}
                     >
-                      {result.aiFeedback.trim().replace(/^#+\s*(Code Review|AI Code Review).*\n/i, '')}
+                      {result.aiFeedback.trim().replace(/^#+\s*(Code Review|AI Code Review|Syncodalyze AI).*\n/i, '')}
                     </ReactMarkdown>
                  </div>
                )}
