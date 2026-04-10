@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useContext, useState, useRef, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import {
-  Code2, LogOut, User as UserIcon, MessageSquare, Shield, ChevronDown,
+  LogOut, User as UserIcon, Shield, ChevronDown,
   Users, FileText, BarChart3, Brain, FolderOpen, LayoutDashboard, Menu, X, Sun, Moon, History
 } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
@@ -65,7 +65,7 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="border-b border-col bg-main/80 backdrop-blur-md sticky top-0 z-50">
+      <nav className="border-b border-col bg-main/80 backdrop-blur-md fixed top-0 left-0 right-0 z-[100] w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Left: Logo + Nav */}
@@ -124,7 +124,6 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Right: Actions */}
           {/* Right: Actions */}
           <div className="flex items-center gap-2 shrink-0">
             {/* Theme Toggle - Always Visible */}
@@ -216,7 +215,7 @@ const Navbar = () => {
               </p>
             </div>
           </div>
-          {[...primaryLinks, ...secondaryLinks].map((l) => (
+          {primaryLinks.map((l) => (
             <NavLink key={l.to} {...l} mobile />
           ))}
           {isAdmin && (

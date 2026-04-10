@@ -94,7 +94,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
         <div className="glass-panel p-5 flex items-center gap-4">
           <div className="h-12 w-12 bg-primary-500/10 rounded-xl flex items-center justify-center">
             <BarChart3 className="h-6 w-6 text-primary-600" />
@@ -125,7 +125,7 @@ const Dashboard = () => {
       </div>
 
       {/* AI Intelligence Summary Card */}
-      <div className="glass-panel p-6 sm:p-8 mb-10 border-primary-500/20 bg-gradient-to-br from-primary-500/[0.08] via-transparent to-transparent relative overflow-hidden group shadow-2xl shadow-primary-500/5">
+      <div className="glass-panel p-6 sm:p-8 mb-10 border-primary-500/20 bg-gradient-to-br from-primary-500/[0.08] via-transparent to-transparent relative overflow-hidden group shadow-2xl shadow-primary-500/5 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-100">
         <div className="absolute top-0 right-0 w-full h-full opacity-[0.03] pointer-events-none group-hover:opacity-[0.05] transition-opacity duration-700" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
         <div className="absolute -top-12 -right-12 opacity-5 blur-2xl group-hover:scale-110 transition-transform duration-1000">
            <Sparkles className="h-64 w-64 text-primary-500" />
@@ -215,7 +215,7 @@ const Dashboard = () => {
 
 
       {/* Reviews Section */}
-      <div className="glass-panel p-6">
+      <div className="glass-panel p-6 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-200">
         <div className="flex items-center justify-between mb-6 border-b border-col pb-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">

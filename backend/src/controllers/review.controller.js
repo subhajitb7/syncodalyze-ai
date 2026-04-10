@@ -1,6 +1,7 @@
 import Review from '../models/Review.model.js';
 import Notification from '../models/Notification.model.js';
 import AiLog from '../models/AiLog.model.js';
+import { callGroq } from '../utils/aiHelper.js';
 
 // @desc    Analyze code snippet with AI
 // @route   POST /api/reviews/analyze
@@ -13,11 +14,6 @@ export const analyzeCode = async (req, res) => {
   }
 
   try {
-    const groqApiKey = process.env.GROQ_API_KEY;
-    if (!groqApiKey || groqApiKey === 'your_groq_api_key_here') {
-      return res.status(500).json({ message: 'Groq API Key is not configured on the server.' });
-    }
-
     const io = req.app.get('io');
     const onlineUsers = req.app.get('onlineUsers');
     const userSocket = onlineUsers.get(req.user._id.toString());
@@ -29,57 +25,61 @@ export const analyzeCode = async (req, res) => {
     sendProgress('Analyzing code structure...');
 
     const prompt = `Please review the following ${language || 'code'} snippet:\n\n\`\`\`${language || ''}\n${codeSnippet}\n\`\`\``;
-    const startTime = Date.now();
+    const systemPrompt = `You are a Senior Technical Architect and Cyber-Security Auditor. Perform a rigorous, vendor-neutral code analysis. 
+               
+               STRUCTURE YOUR RESPONSE AS FOLLOWS:
+               
+               # 📑 Technical Review Report
+               
+               ## 📊 Executive Summary
+               (Standardize as a 2-sentence formal assessment of architecture and risk.)
+               
+               ## 📈 Analysis Scorecard
+               | Metric | Score | Risk Level |
+               | :--- | :--- | :--- |
+               | Security & Vulnerabilities | X/10 | [High/Mid/Low] |
+               | Performance & Efficiency | X/10 | [High/Mid/Low] |
+               | Maintainability & Style | X/10 | [High/Mid/Low] |
+               
+               ## 🛡️ Security & Integrity
+               (Detail unsafe operations, potential leaks, or vulnerabilities. Use technical documentation references.)
+               
+               ## 🛠️ Technical Findings
+               | Line Range | Finding | Impact | Actionable Mitigation |
+               | :--- | :--- | :--- | :--- |
+               | [Lx-Ly] | Brief technical description | [High/Low] | Specific code refactor suggestion |
+               
+               ## 🚀 Performance Benchmarks
+               (Identify complexity issues, memory management, or execution bottlenecks.)
+               
+               ## 🧱 Architectural Recommendations
+               (High-level suggestions for improved design patterns or scalability.)
+               
+               ---
+               
+               ### 🏆 OVERALL RATING: X/10
+               
+               STRICT ANALYTICAL RULES:
+               - Use a formal, objective technical tone. No conversational filler.
+               - Ensure tables are perfectly aligned Markdown.
+               - Standardize line references as [Lx-Ly].
+               - DO NOT include "Code Review" at the top.
+               
+               METADATA (Srictly hidden at the end):
+               [ISSUES_COUNT]: X
+               [TAGS]: tag1, tag2, tag3`;
 
     sendProgress('Detecting vulnerabilities...');
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${groqApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          {
-            role: 'system',
-            content:
-              'You are an expert code reviewer. Analyze the provided code, find any bugs or vulnerabilities, suggest improvements, and give an overall rating out of 10. Format your response clearly in Markdown. Point out specific lines if possible. \n\nAt the very end of your response, strictly include these two metadata tags:\n1. [ISSUES_COUNT]: X (where X is the number of bugs/vulnerabilities)\n2. [TAGS]: tag1, tag2, tag3 (where tags are categories like #Security, #Performance, #UI, #Logic, #React, etc. Provide at least 3 relevant tags). \n\nDo NOT include a main title/heading like "Code Review" or "Analysis" at the top of your response, just start directly with your observations.',
-          },
-          { role: 'user', content: prompt },
-        ],
-        temperature: 0.3,
-        max_tokens: 2000,
-      }),
-    });
+    const { content: aiFeedback, usage, responseTimeMs } = await callGroq(systemPrompt, prompt, 0.2, 2000);
 
-    const responseTimeMs = Date.now() - startTime;
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('Groq API Error:', errorData);
-
-      // Log the failed AI call
-      await AiLog.create({
-        user: req.user._id,
-        prompt,
-        response: errorData,
-        language,
-        responseTimeMs,
-        status: 'error',
-        errorMessage: errorData,
-      });
-
+    if (!aiFeedback) {
       return res.status(500).json({ message: 'Failed to communicate with AI service' });
     }
-
-    const data = await response.json();
     
     sendProgress('Generating suggestions...');
     
-    const aiFeedback = data.choices[0]?.message?.content || 'No feedback generated.';
-    const tokensUsed = data.usage?.total_tokens || 0;
+    const tokensUsed = usage?.total_tokens || 0;
     const saveToHistory = req.body.saveToHistory !== false;
 
     // Extract Issues Count
@@ -283,38 +283,8 @@ export const chatWithAi = async (req, res) => {
   }
 
   try {
-    const groqApiKey = process.env.GROQ_API_KEY;
-    if (!groqApiKey) {
-      return res.status(500).json({ message: 'Groq API Key is not configured' });
-    }
-
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${groqApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert coding assistant. Help the user with their code, provide snippets if needed, and be concise and helpful. Format your responses in Markdown.',
-          },
-          ...messages,
-        ],
-        temperature: 0.7,
-        max_tokens: 1024,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      return res.status(500).json({ message: 'AI Chat Error: ' + errorData });
-    }
-
-    const data = await response.json();
-    const reply = data.choices[0]?.message?.content || 'No response generated.';
+    const systemPrompt = 'You are an elite Full-Stack Coding Mentor. Provide precise, technically dense assistance. Use modern best practices, provide high-quality snippets, and eliminate conversational filler. Format your responses in clean Markdown.';
+    const { content: reply } = await callGroq(systemPrompt, messages.map(m => `[${m.role.toUpperCase()}]: ${m.content}`).join('\n'), 0.7, 1024);
     
     res.json({ reply });
   } catch (error) {

@@ -56,7 +56,7 @@ const ProjectChatDrawer = ({ projectId, isOpen, onClose, initialMessages: messag
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full sm:w-[400px] bg-main border-l border-col shadow-2xl z-[60] flex flex-col animate-in slide-in-from-right duration-300">
+    <div className="fixed inset-y-0 right-0 w-full sm:w-[400px] bg-main border-l border-col shadow-2xl z-[150] flex flex-col animate-in slide-in-from-right duration-300">
       {/* Header */}
       <div className="p-6 border-b border-col flex items-center justify-between bg-sec/30 backdrop-blur-md">
         <div className="flex items-center gap-3">

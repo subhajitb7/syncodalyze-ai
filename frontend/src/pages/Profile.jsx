@@ -75,9 +75,9 @@ const Profile = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
       {/* Header section with User Context */}
-      <div className="flex flex-col md:flex-row items-center gap-8 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row items-center gap-8 mb-12 animate-in fade-in slide-in-from-bottom-2 duration-700">
         <div className="relative group">
           <div className={`h-32 w-32 rounded-3xl flex items-center justify-center text-4xl font-bold border-2 transition-all duration-500 shadow-2xl ${isAdmin ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30' : 'bg-primary-500/10 text-primary-500 border-primary-500/30'
             }`}>
@@ -110,7 +110,7 @@ const Profile = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Sidebar Nav (Visual) */}
-        <div className="lg:col-span-3 space-y-2">
+        <div className="lg:col-span-3 space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
           <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-primary-500/10 text-primary-500 font-bold text-sm border border-primary-500/20">
             <Settings className="h-4 w-4" /> Account Settings
           </button>
@@ -120,7 +120,7 @@ const Profile = () => {
         </div>
 
         {/* Main Settings Panel */}
-        <div className="lg:col-span-9 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+        <div className="lg:col-span-9 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
           <div className="glass-panel overflow-hidden border-col shadow-2xl">
             <div className="p-8 border-b border-col bg-sec/[0.03]">
               <h3 className="text-lg font-bold text-main flex items-center gap-2">

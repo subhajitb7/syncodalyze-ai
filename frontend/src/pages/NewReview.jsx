@@ -10,7 +10,7 @@ import python from 'react-syntax-highlighter/dist/esm/languages/prism/python';
 import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
 import { vscDarkPlus, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { ThemeContext } from '../context/ThemeContext';
-import { AlertTriangle, CheckCircle, Loader2, Send, Code, Sparkles, ChevronDown, History, ZapOff, ShieldOff } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Loader2, Code, Sparkles, ChevronDown, ZapOff } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 
 SyntaxHighlighter.registerLanguage('jsx', jsx);
@@ -161,7 +161,7 @@ const NewReview = () => {
         </div>
       )}
       <div className="border-b border-col bg-sec p-4 shadow-sm relative z-50">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
           <div className="flex w-full sm:w-auto items-center gap-4 flex-1">
              <input
                type="text"
@@ -304,7 +304,7 @@ const NewReview = () => {
             
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-transparent pb-8">
                {loading && (
-                 <div className="flex flex-col items-center justify-center h-full text-sec gap-4">
+                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center h-full text-sec gap-4">
                     <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
                     <p className="animate-pulse font-bold">{aiProgressText}</p>
                  </div>

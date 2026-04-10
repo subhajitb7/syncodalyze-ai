@@ -52,7 +52,7 @@ function AppContent() {
     <Router>
       <div className="min-h-screen bg-main text-main flex flex-col transition-colors duration-300">
         <Navbar />
-        <main className="flex-grow flex flex-col min-h-0 overflow-hidden">
+        <main className="flex-grow flex flex-col min-h-0 pt-16">
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<AuthPage />} />

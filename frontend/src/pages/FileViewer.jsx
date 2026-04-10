@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { ThemeContext } from '../context/ThemeContext';
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Sparkles, Loader2, Clock, GitBranch, FileCode } from 'lucide-react';
+import { ArrowLeft, Sparkles, Loader2, Clock, GitBranch, FileCode, CheckCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -129,7 +129,7 @@ const FileViewer = () => {
     <div className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden">
       {/* Header */}
       <div className="border-b border-col bg-sec p-4 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link to={`/projects/${projectId}`} className="text-sec hover:text-main transition-colors font-medium">
               <ArrowLeft className="h-5 w-5" />
@@ -177,7 +177,7 @@ const FileViewer = () => {
       {/* AI Summary Banner */}
       {summary && (
         <div className="bg-purple-500/10 border-b border-purple-500/20 p-6 animate-in slide-in-from-top-2 duration-300">
-           <div className="max-w-7xl mx-auto flex gap-6 items-start">
+           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-6 items-start">
               <div className="h-12 w-12 bg-purple-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/30">
                 <FileCode className="h-6 w-6 text-white" />
               </div>
@@ -220,12 +220,12 @@ const FileViewer = () => {
         {/* Review Results */}
         {reviewResult && (
           <div className="flex-1 lg:w-1/2 overflow-y-auto bg-ter/30 p-6 border-l border-col">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-6 border-b border-col/30">
-               <div>
+            <div className="mb-8">
+               <div className="flex items-center gap-4">
                   <h3 className="text-lg font-bold text-main flex items-center gap-2">
                     <Sparkles className="h-5 w-5 text-emerald-500" /> AI Review Report
                   </h3>
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2">
                      {reviewResult.bugsFound > 0 ? (
                         <span className="text-[10px] font-black uppercase bg-red-500/10 text-red-500 px-2 py-1 rounded border border-red-500/20">
                           {reviewResult.bugsFound} Issues Detected
@@ -239,13 +239,6 @@ const FileViewer = () => {
                         v{file.currentVersion}
                      </span>
                   </div>
-               </div>
-               <div className="flex flex-wrap gap-1.5 justify-end max-w-[200px]">
-                  {reviewResult.aiTags?.map((tag, i) => (
-                    <span key={i} className="text-[9px] font-black uppercase bg-primary-500/5 text-primary-500 border border-primary-500/10 px-2 py-0.5 rounded-full">
-                      #{tag}
-                    </span>
-                  ))}
                </div>
             </div>
 

@@ -47,14 +47,17 @@ const Projects = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      {/* Platform-standard vertical baseline spacer */}
+      <div className="h-10 mb-2 opacity-0 pointer-events-none hidden lg:block"></div>
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold">Projects</h1>
-          <p className="text-sec mt-1 font-medium">Manage your code repositories and files.</p>
+          <p className="text-sec mt-1">Manage your analysis history and collaborative codebases.</p>
         </div>
         <div className="flex items-center gap-3">
           <SearchBar />
-          <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
+          <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
             <Plus className="h-5 w-5" /> New Project
           </button>
         </div>
@@ -77,7 +80,8 @@ const Projects = () => {
           <button onClick={() => setShowModal(true)} className="btn-secondary">Create Project</button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        /* Projects Grid */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
           {projects.map((proj) => (
             <Link
               key={proj._id}

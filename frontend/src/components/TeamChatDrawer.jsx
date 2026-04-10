@@ -5,7 +5,7 @@ import { SocketPubSubContext } from '../context/SocketPubSubContext';
 import useSpeechToText from '../hooks/useSpeechToText';
 import { 
   X, Send, User, Sparkles, MessageSquare, 
-  Trash2, Mic, MicOff 
+  Mic, MicOff 
 } from 'lucide-react';
 
 const TeamChatDrawer = ({ teamId, isOpen, onClose }) => {
@@ -105,7 +105,7 @@ const TeamChatDrawer = ({ teamId, isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full sm:w-[450px] bg-main border-l border-col shadow-2xl z-[70] flex flex-col animate-in slide-in-from-right duration-300">
+    <div className="fixed inset-y-0 right-0 w-full sm:w-[450px] bg-main border-l border-col shadow-2xl z-[150] flex flex-col animate-in slide-in-from-right duration-300">
       {/* Header */}
       <div className="p-6 border-b border-col flex items-center justify-between bg-sec/30 backdrop-blur-md">
         <div className="flex items-center gap-3">
@@ -125,53 +125,10 @@ const TeamChatDrawer = ({ teamId, isOpen, onClose }) => {
       {/* Messages Area */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth custom-scrollbar"
+        className="flex-1 overflow-y-auto p-6 flex flex-col-reverse justify-end space-y-6 space-y-reverse scroll-smooth custom-scrollbar"
       >
-        {messages.length === 0 && !loading ? (
-          <div className="flex flex-col items-center justify-center h-full text-center gap-4 opacity-40">
-            <Sparkles className="h-12 w-12 text-primary-500" />
-            <div>
-                 <p className="text-sm font-bold text-main">No discussion yet</p>
-                 <p className="text-xs font-medium text-sec mt-1">Start the conversation below.</p>
-            </div>
-          </div>
-        ) : (
-          messages.map((msg, index) => {
-            const isMe = msg.user?._id === user?._id;
-            
-            return (
-              <div key={msg._id || index} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                <div className={`flex items-end gap-3 max-w-[85%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                  {/* Avatar */}
-                  <div className={`h-8 w-8 rounded-full shrink-0 flex items-center justify-center border shadow-sm text-xs font-bold ${
-                    isMe ? 'bg-primary-500 border-primary-600 text-white' : 'bg-sec border-col text-sec'
-                  }`}>
-                    {msg.user?.name?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
-                  </div>
-                  
-                  {/* Bubble */}
-                  <div className={`px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm break-words leading-relaxed ${
-                    isMe 
-                      ? 'bg-primary-500 text-white rounded-br-none' 
-                      : 'bg-sec text-main border border-col rounded-bl-none'
-                  }`}>
-                    {msg.text}
-                  </div>
-                </div>
-                
-                {/* Meta */}
-                <div className={`flex items-center gap-2 mt-1.5 px-11 text-[9px] font-black uppercase tracking-tighter opacity-40 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                   <span>{isMe ? 'You' : msg.user?.name}</span>
-                   <span className="h-1 w-1 bg-current rounded-full"></span>
-                   <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                </div>
-              </div>
-            );
-          })
-        )}
-        
         {typingUser && (
-          <div className="px-11 flex items-center gap-2 animate-pulse">
+          <div className="px-11 flex items-center gap-2 animate-pulse mb-4">
             <div className="flex gap-1">
               <span className="w-1 h-1 bg-primary-500 rounded-full animate-bounce"></span>
               <span className="w-1 h-1 bg-primary-500 rounded-full animate-bounce [animation-delay:0.2s]"></span>
@@ -180,6 +137,49 @@ const TeamChatDrawer = ({ teamId, isOpen, onClose }) => {
             <p className="text-[10px] font-bold text-primary-600 italic">
               {typingUser} is typing...
             </p>
+          </div>
+        )}
+
+        {[...messages].reverse().map((msg, index) => {
+          const isMe = msg.user?._id === user?._id;
+          
+          return (
+            <div key={msg._id || index} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+              <div className={`flex items-end gap-3 max-w-[85%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                {/* Avatar */}
+                <div className={`h-8 w-8 rounded-full shrink-0 flex items-center justify-center border shadow-sm text-xs font-bold ${
+                  isMe ? 'bg-primary-500 border-primary-600 text-white' : 'bg-sec border-col text-sec'
+                }`}>
+                  {msg.user?.name?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
+                </div>
+                
+                {/* Bubble */}
+                <div className={`px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm break-words leading-relaxed ${
+                  isMe 
+                    ? 'bg-primary-500 text-white rounded-br-none' 
+                    : 'bg-sec text-main border border-col rounded-bl-none'
+                }`}>
+                  {msg.text}
+                </div>
+              </div>
+              
+              {/* Meta */}
+              <div className={`flex items-center gap-2 mt-1.5 px-11 text-[9px] font-black uppercase tracking-tighter opacity-40 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                 <span>{isMe ? 'You' : msg.user?.name}</span>
+                 <span className="h-1 w-1 bg-current rounded-full"></span>
+                 <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+            </div>
+          );
+        })}
+        
+        {messages.length === 0 && !loading && (
+          <div className="flex flex-col items-center justify-center h-full text-center gap-4 opacity-40">
+            <Sparkles className="h-12 w-12 text-primary-500" />
+            <div>
+                 <p className="text-sm font-bold text-main">No discussion yet</p>
+                 <p className="text-xs font-medium text-sec mt-1">Start the conversation below.</p>
+            </div>
           </div>
         )}
       </div>

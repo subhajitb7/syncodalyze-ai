@@ -5,7 +5,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   FileCode, Plus, FolderOpen, ArrowLeft, X, Upload, Trash2,
   RefreshCw, Settings, ChevronDown, CheckCircle, Sparkles,
-  MessageSquare, StickyNote, ListTodo
+  MessageSquare, ListTodo
 } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { ThemeContext } from '../context/ThemeContext';
@@ -25,7 +25,6 @@ const ProjectDetail = () => {
   const [isManualOverride, setIsManualOverride] = useState(false);
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [messages, setMessages] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [liveToast, setLiveToast] = useState(null);
   const [typingUser, setTypingUser] = useState(null);
   const [uploadQueue, setUploadQueue] = useState([]); // New Bulk Queue
@@ -96,7 +95,6 @@ const ProjectDetail = () => {
 
         // Show unread notification if drawer is closed
         if (!chatOpen) {
-          setUnreadCount(prev => prev + 1);
           setLiveToast(msg);
           setTimeout(() => setLiveToast(null), 5000);
         }
@@ -110,10 +108,7 @@ const ProjectDetail = () => {
     return () => unsubscribe();
   }, [id, subscribe, chatOpen]);
 
-  // Reset unread when opening chat
-  useEffect(() => {
-    if (chatOpen) setUnreadCount(0);
-  }, [chatOpen]);
+
 
   useEffect(() => {
     if (isManualOverride) return;
@@ -297,7 +292,7 @@ const ProjectDetail = () => {
         <ArrowLeft className="h-4 w-4" /> Back to Projects
       </Link>
 
-      <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-6 bg-sec/20 p-4 rounded-3xl">
+      <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-6 bg-sec/20 px-0 py-4 rounded-3xl">
         <div className="flex items-center gap-4">
           <div className="h-12 w-12 bg-primary-500/10 rounded-2xl flex items-center justify-center border border-primary-500/20 shadow-xl shadow-primary-500/5">
             <FolderOpen className="h-6 w-6 text-primary-500" />
@@ -350,7 +345,7 @@ const ProjectDetail = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <div className={project.team ? "lg:col-span-2" : "lg:col-span-3"}>
-          <div className="glass-panel p-8 shadow-2xl relative overflow-hidden group transition-all duration-500 ease-in-out">
+          <div className="glass-panel p-8 shadow-2xl relative overflow-hidden group transition-all duration-500 ease-in-out animate-in fade-in slide-in-from-bottom-2">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 blur-[100px] pointer-events-none group-hover:bg-primary-500/10 transition-all"></div>
             <h2 className="text-xl font-bold text-main mb-8 flex items-center gap-3">
               <FileCode className="h-5 w-5 text-primary-500" />
@@ -407,7 +402,7 @@ const ProjectDetail = () => {
 
         {project.team && (
           <div className="lg:col-span-1">
-            <div className="glass-panel p-6 border-col/50">
+            <div className="glass-panel p-6 border-col/50 animate-in fade-in slide-in-from-bottom-2">
               <h3 className="text-xl font-bold text-main mb-6 flex items-center gap-3">
                 <ListTodo className="h-5 w-5 text-emerald-500" />
                 Development Insights

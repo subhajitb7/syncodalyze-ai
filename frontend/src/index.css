@@ -25,6 +25,12 @@
   --text-main: #ffffff;
   --text-sec: #9ca3af;
   --shadow-premium: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  scrollbar-gutter: stable;
+}
+
+html, body {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .light {
@@ -167,120 +173,130 @@
 .ai-feedback-content {
   color: var(--text-sec);
   font-size: 0.875rem;
-  line-height: 1.75;
+  line-height: 1.8;
 }
 
 .ai-feedback-content h1,
 .ai-feedback-content h2,
-.ai-feedback-content h3,
-.ai-feedback-content h4 {
-  color: var(--text-main);
-  font-weight: 700;
-  margin-top: 1.25rem;
-  margin-bottom: 0.5rem;
-}
-
-.ai-feedback-content h1 {
-  font-size: 1.5rem;
-}
-
-.ai-feedback-content h2 {
-  font-size: 1.25rem;
-}
-
 .ai-feedback-content h3 {
-  font-size: 1.1rem;
+  color: var(--text-main);
+  font-weight: 800;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  letter-spacing: -0.025em;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.ai-feedback-content h4 {
-  font-size: 1rem;
-  color: var(--color-primary-500);
+.ai-feedback-content h2,
+.ai-feedback-content h3 {
+  border-left: 4px solid var(--color-primary-500);
+  padding-left: 1rem;
+  margin-left: -1.25rem;
 }
+
+.ai-feedback-content h1 { font-size: 1.75rem; border-bottom: 1px solid var(--border-col); padding-bottom: 1rem; }
+.ai-feedback-content h2 { font-size: 1.25rem; }
+.ai-feedback-content h3 { font-size: 1.1rem; }
 
 .ai-feedback-content p {
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .ai-feedback-content strong {
   color: var(--text-main);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .ai-feedback-content code {
   background: var(--bg-ter);
   border: 1px solid var(--border-col);
-  padding: 0.15rem 0.4rem;
-  border-radius: 0.25rem;
-  font-size: 0.8rem;
-  color: #f472b6;
-  font-family: ui-monospace, monospace;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.4rem;
+  font-size: 0.85em;
+  color: var(--color-primary-400);
+  font-family: ui-monospace, 'Fira Code', monospace;
 }
 
 .ai-feedback-content pre {
-  background: var(--bg-sec);
+  background: #000;
   border: 1px solid var(--border-col);
-  border-radius: 0.5rem;
-  padding: 1rem;
+  border-radius: 1rem;
+  padding: 1.25rem;
   overflow-x: auto;
-  margin: 1rem 0;
+  margin: 1.5rem 0;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
 }
 
 .ai-feedback-content pre code {
   background: none;
   border: none;
   padding: 0;
-  color: var(--text-main);
+  color: #e2e8f0;
   font-size: 0.8rem;
 }
 
 .ai-feedback-content ul,
 .ai-feedback-content ol {
   padding-left: 1.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.ai-feedback-content ul {
-  list-style-type: disc;
-}
-
-.ai-feedback-content ol {
-  list-style-type: decimal;
+  margin-bottom: 1.25rem;
 }
 
 .ai-feedback-content li {
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.5rem;
 }
 
 .ai-feedback-content blockquote {
-  border-left: 3px solid var(--color-primary-500);
-  padding-left: 1rem;
-  color: var(--text-sec);
-  margin: 1rem 0;
+  background: var(--color-primary-500)/[0.05];
+  border-left: 4px solid var(--color-primary-500);
+  padding: 1rem 1.5rem;
+  border-radius: 0 0.75rem 0.75rem 0;
+  color: var(--text-main);
+  margin: 1.5rem 0;
   font-style: italic;
+  font-weight: 500;
 }
 
 .ai-feedback-content table {
   width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1.5rem 0;
+  border: 1px solid var(--border-col);
+  border-radius: 0.75rem;
+  overflow: hidden;
 }
 
 .ai-feedback-content th,
 .ai-feedback-content td {
-  border: 1px solid var(--border-col);
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem 1rem;
   text-align: left;
+  border-bottom: 1px solid var(--border-col);
+  font-size: 0.8rem;
 }
 
 .ai-feedback-content th {
-  background: var(--bg-sec);
+  background: var(--bg-ter);
   color: var(--text-main);
-  font-weight: 600;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.7rem;
+}
+
+.ai-feedback-content tr:last-child td {
+  border-bottom: none;
+}
+
+.ai-feedback-content tr:nth-child(even) {
+  background: var(--bg-sec)/[0.4];
 }
 
 .ai-feedback-content hr {
-  border-color: var(--border-col);
-  margin: 1.5rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--border-col);
+  margin: 2rem 0;
 }
 
 /* Dynamic Editor Overrides */

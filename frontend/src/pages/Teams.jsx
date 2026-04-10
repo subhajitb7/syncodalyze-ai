@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { Users, Plus, X, Trash2, FolderOpen, Crown, ShieldCheck, User as UserIcon } from 'lucide-react';
+import { Users, Plus, X, Trash2, FolderOpen, Crown, ShieldCheck, User as UserIcon, UsersRound } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
 
 const Teams = () => {
@@ -53,6 +53,9 @@ const Teams = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      {/* Platform-standard vertical baseline spacer */}
+      <div className="h-10 mb-2 opacity-0 pointer-events-none hidden lg:block"></div>
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold">Teams</h1>
@@ -60,8 +63,8 @@ const Teams = () => {
         </div>
         <div className="flex items-center gap-3">
           <SearchBar />
-          <button onClick={() => setShowCreate(true)} className="btn-primary flex items-center gap-2">
-            <Plus className="h-5 w-5" /> New Team
+          <button onClick={() => setShowCreate(true)} className="btn-primary flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <UsersRound className="h-5 w-5" /> Create Team
           </button>
         </div>
       </div>

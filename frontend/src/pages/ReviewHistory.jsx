@@ -63,6 +63,9 @@ const ReviewHistory = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      {/* Platform-standard vertical baseline spacer */}
+      <div className="h-10 mb-2 opacity-0 pointer-events-none hidden lg:block"></div>
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3 text-main">

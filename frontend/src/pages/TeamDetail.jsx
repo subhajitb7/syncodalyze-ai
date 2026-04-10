@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { ArrowLeft, Users, Plus, Trash2, Crown, ShieldCheck, User as UserIcon, FolderOpen, X, UserPlus, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Users, Trash2, Crown, ShieldCheck, User as UserIcon, FolderOpen, X, UserPlus, MessageSquare } from 'lucide-react';
 import TeamChatDrawer from '../components/TeamChatDrawer';
 import { SocketPubSubContext } from '../context/SocketPubSubContext';
 
@@ -113,7 +113,7 @@ const TeamDetail = () => {
   if (!team) return <div className="text-center py-20 text-sec font-medium">Team not found.</div>;
 
   return (
-    <div className="max-w-[80vw] mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
       <Link to="/teams" className="flex items-center gap-2 text-sec hover:text-main font-medium transition-colors mb-6 text-sm">
         <ArrowLeft className="h-4 w-4" /> Back to Teams
       </Link>
@@ -147,8 +147,8 @@ const TeamDetail = () => {
         )}
       </div>
 
-      {/* Grid Wrapper: Centered 80% width of container */}
-      <div className="max-w-[80%] mx-auto">
+      {/* Grid Wrapper: Consistent with platform grid */}
+      <div className="w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           {/* Left Col: Members (Compact) */}
           <div className="glass-panel p-4 shadow-xl border-primary-500/10 transition-all duration-500 ease-in-out">
@@ -171,7 +171,7 @@ const TeamDetail = () => {
                       <p className="text-[10px] text-sec font-medium opacity-40">{m.user?.email || 'Missing data'}</p>
                     </div>
                   </div>
-                  {canManage && m.role !== 'owner' && (
+                  {canManage && m.role !== 'owner' && (m.user?._id || m.user) !== user?._id && (
                     <div className="flex items-center gap-1.5">
                       <select
                         value={m.role}
@@ -220,7 +220,7 @@ const TeamDetail = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {myRole === 'owner' && (
+                      {canManage && (
                         <button 
                           onClick={(e) => {
                             e.preventDefault();
