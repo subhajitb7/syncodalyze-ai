@@ -26,7 +26,8 @@ import AiChatFloating from './components/AiChatFloating';
 import Footer from './components/Footer';
 
 import axios from 'axios';
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:5007' : `http://${window.location.hostname}:5006`;
+// Connectivity standardization: Using the current origin allows the Vite proxy to handle routing.
+const API_URL = ''; 
 axios.defaults.baseURL = API_URL;
 axios.defaults.withCredentials = true;
 
@@ -82,9 +83,7 @@ function AppContent() {
 
 function App() {
   useEffect(() => {
-    if (window.location.hostname === 'localhost') {
-      window.location.href = window.location.href.replace('localhost', '127.0.0.1');
-    }
+    // Legacy host redirect logic removed for stability
   }, []);
 
   return (
