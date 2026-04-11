@@ -196,10 +196,19 @@ const NewReview = () => {
     setIsManualOverride(false);
 
     const reader = new FileReader();
+
+    // Sovereign Extension Guard: Neutralize media, PDFs, and binary artifacts
+    const forbiddenExts = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'avi', 'mp3', 'wav', 'zip', 'tar', 'gz', 'exe', 'bin'];
+    const ext = file.name.split('.').pop().toLowerCase();
+    
+    if (forbiddenExts.includes(ext)) {
+      setError(`File type ".${ext}" is not supported for analysis. Please upload a source code file.`);
+      return;
+    }
+
     reader.onload = (ev) => {
       setCodeSnippet(ev.target.result);
       
-      const ext = file.name.split('.').pop().toLowerCase();
       const langMap = {
         js: 'javascript', jsx: 'javascript', ts: 'typescript', tsx: 'typescript',
         py: 'python', java: 'java', cpp: 'cpp', c: 'cpp', go: 'go',
@@ -436,7 +445,13 @@ const NewReview = () => {
                 </button>
               </div>
 
-              <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileSelect} 
+                className="hidden" 
+                accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.go,.rb,.php,.rs,.kt,.swift,.cs,.sql,.sh,.bash,.dart,.scala,.txt,.md,.json,.yml,.yaml,.html,.css"
+              />
 
               <button
                   onClick={() => setIsHistoryOpen(true)}

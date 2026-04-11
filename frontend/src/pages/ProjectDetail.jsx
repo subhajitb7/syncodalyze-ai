@@ -5,7 +5,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   FileCode, Plus, FolderOpen, ArrowLeft, X, Upload, Trash2,
   RefreshCw, Settings, ChevronDown, CheckCircle, Sparkles,
-  MessageSquare, ListTodo
+  MessageSquare, ListTodo, AlertCircle
 } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { ThemeContext } from '../context/ThemeContext';
@@ -31,6 +31,7 @@ const ProjectDetail = () => {
   const [uploadQueue, setUploadQueue] = useState([]); // New Bulk Queue
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [userRole, setUserRole] = useState('member');
+  const [uploadError, setUploadError] = useState(null);
 
   // Unified Confirmation State
   const [confirmConfig, setConfirmConfig] = useState({
@@ -178,8 +179,17 @@ const ProjectDetail = () => {
   };
 
   const processFiles = async (files) => {
+    setUploadError(null);
     const newItems = [];
+    const forbiddenExts = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'avi', 'mp3', 'wav', 'zip', 'tar', 'gz', 'exe', 'bin'];
+
     for (const file of files) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (forbiddenExts.includes(ext)) {
+        setUploadError(`File type ".${ext}" is not supported. Please upload source code files.`);
+        continue; // Skip invalid file but allow others in bulk
+      }
+
       const content = await file.text();
       let detectedLang = 'javascript';
       try {
@@ -201,8 +211,10 @@ const ProjectDetail = () => {
         language: detectedLang
       });
     }
-    setUploadQueue(prev => [...prev, ...newItems]);
-    setIsBulkMode(true);
+    if (newItems.length > 0) {
+      setUploadQueue(prev => [...prev, ...newItems]);
+      setIsBulkMode(true);
+    }
   };
 
   const handleFileChange = (e) => {
@@ -268,9 +280,17 @@ const ProjectDetail = () => {
     const file = e.target.files[0];
     if (!file) return;
 
+    setUploadError(null);
     setIsManualOverride(false);
 
+    const forbiddenExts = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'avi', 'mp3', 'wav', 'zip', 'tar', 'gz', 'exe', 'bin'];
     const ext = file.name.split('.').pop().toLowerCase();
+
+    if (forbiddenExts.includes(ext)) {
+      setUploadError(`File type ".${ext}" is not supported. Please upload a source code file.`);
+      return;
+    }
+
     const langMap = {
       js: 'javascript', jsx: 'javascript', ts: 'typescript', tsx: 'typescript',
       py: 'python', java: 'java', cpp: 'cpp', c: 'cpp', go: 'go',
@@ -467,10 +487,17 @@ const ProjectDetail = () => {
                   onChange={handleFileChange}
                   className="hidden"
                   multiple
-                  accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.go,.html,.css,.json,.md"
+                  accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.go,.rb,.php,.rs,.kt,.swift,.cs,.sql,.sh,.bash,.dart,.scala,.txt,.md,.json,.yml,.yaml,.html,.css"
                 />
               </label>
             </div>
+
+            {uploadError && (
+              <div className="mb-6 bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-red-600 flex items-center gap-3 animate-in shake duration-300">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <p className="text-xs font-bold">{uploadError}</p>
+              </div>
+            )}
 
             {uploadQueue.length > 0 ? (
               <div className="flex flex-col gap-4">

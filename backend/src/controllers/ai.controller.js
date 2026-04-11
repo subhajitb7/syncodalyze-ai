@@ -54,6 +54,9 @@ export const summarizeFile = async (req, res) => {
 
     res.json({ summary });
   } catch (error) {
+    if (error.response?.status === 429) {
+      return res.status(429).json({ message: 'The Intelligence Core is cooling down. Please wait 30 seconds before requesting further insights.' });
+    }
     console.error(error);
     res.status(500).json({ message: 'Failed to generate summary' });
   }
@@ -81,6 +84,9 @@ export const summarizeSnippet = async (req, res) => {
 
     res.json({ summary });
   } catch (error) {
+    if (error.response?.status === 429) {
+      return res.status(429).json({ message: 'The Intelligence Core is cooling down. Please wait 30 seconds before requesting further insights.' });
+    }
     console.error('Snippet Summary Error:', error);
     res.status(500).json({ message: 'Failed to generate summary' });
   }
@@ -114,6 +120,9 @@ export const getDeveloperInsights = async (req, res) => {
 
     res.json({ insights });
   } catch (error) {
+    if (error.response?.status === 429) {
+      return res.status(429).json({ message: 'The Intelligence Core is cooling down. Please wait 30 seconds before requesting further insights.' });
+    }
     console.error(error);
     res.status(500).json({ message: 'Failed to generate insights' });
   }
@@ -146,6 +155,9 @@ export const generateReviewEmail = async (req, res) => {
 
     res.json({ emailBody });
   } catch (error) {
+    if (error.response?.status === 429) {
+      return res.status(429).json({ message: 'The Intelligence Core is cooling down. Please wait 30 seconds before requesting further insights.' });
+    }
     console.error(error);
     res.status(500).json({ message: 'Failed to generate email' });
   }
