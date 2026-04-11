@@ -6,7 +6,6 @@ import {
   BarChart3, Bug, CheckCircle, Shield, Loader2, Upload, ChevronRight, Sparkles
 } from 'lucide-react';
 import GithubIcon from '../components/GithubIcon';
-import SearchBar from '../components/SearchBar';
 import { AuthContext } from '../context/AuthContext';
 
 const Dashboard = () => {
@@ -83,11 +82,10 @@ const Dashboard = () => {
           <p className="text-sec mt-1">Record and analyze your code reviews.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <SearchBar />
-          <Link to="/new-review" className="btn-primary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold shadow-lg shadow-primary-500/10">
+          <Link to="/new-review?new=true" className="btn-primary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold shadow-lg shadow-primary-500/10">
             <Plus className="h-3.5 w-3.5" /> Quick Code
           </Link>
-          <Link to="/new-review?upload=true" className="btn-secondary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold border-col">
+          <Link to="/new-review?new=true&upload=true" className="btn-secondary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold border-col">
             <Upload className="h-3.5 w-3.5" /> Upload File
           </Link>
           <Link to="/projects?create=true" className="btn-secondary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold border-col">

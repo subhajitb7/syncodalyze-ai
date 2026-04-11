@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import hljs from 'highlight.js';
 import ReactMarkdown from 'react-markdown';
@@ -11,7 +11,7 @@ import python from 'react-syntax-highlighter/dist/esm/languages/prism/python';
 import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { ThemeContext } from '../context/ThemeContext';
-import { AlertTriangle, CheckCircle, Loader2, Code, Sparkles, ChevronDown, ZapOff, FileCode, Upload, History, X, ChevronRight } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Loader2, Code, Sparkles, ChevronDown, ZapOff, FileCode, Upload, History, X, ChevronRight, Trash2 } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -37,6 +37,8 @@ const NewReview = () => {
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const hasReset = useRef(false);
   const fileInputRef = useRef(null);
 
   const languages = [
@@ -213,13 +215,57 @@ const NewReview = () => {
     reader.readAsText(file);
   };
 
+  const handleClear = () => {
+    setCodeSnippet('');
+    setTitle('');
+    setResult(null);
+    setError(null);
+    setSummary('');
+    setIsManualOverride(false);
+    // Persist the clear to localStorage
+    localStorage.removeItem('draft_code');
+    localStorage.removeItem('draft_title');
+    localStorage.removeItem('draft_result');
+  };
+
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('upload') === 'true' && fileInputRef.current) {
-      fileInputRef.current.click();
-      window.history.replaceState({}, '', window.location.pathname);
+    // Sovereign Guard: Ensure reset logic only runs once per mount
+    if (hasReset.current) return;
+    
+    const isNewIntent = searchParams.get('new') === 'true';
+    const isUploadIntent = searchParams.get('upload') === 'true';
+
+    if (isNewIntent) {
+      hasReset.current = true;
+      
+      // Liquidate Draft Cache
+      localStorage.removeItem('draft_title');
+      localStorage.removeItem('draft_code');
+      localStorage.removeItem('draft_lang');
+      localStorage.removeItem('draft_result');
+      
+      // Reset State Hub
+      setTitle('');
+      setCodeSnippet('');
+      setLanguage('javascript');
+      setResult(null);
+      setSummary('');
+      
+      // Navigate/Clean URL without triggering reload
+      if (isUploadIntent) {
+        setSearchParams({ upload: 'true' }, { replace: true });
+        // Immediate trigger for better browser trust
+        if (fileInputRef.current) fileInputRef.current.click();
+      } else {
+        setSearchParams({}, { replace: true });
+      }
+    } else if (isUploadIntent) {
+      hasReset.current = true;
+      // Handle direct upload intent if it bypasses the "new" flag
+      setSearchParams({}, { replace: true });
+      if (fileInputRef.current) fileInputRef.current.click();
     }
-  }, []);
+  }, [searchParams, setSearchParams]);
 
   const currentLangName = languages.find(l => l.id === language)?.name || language;
 
@@ -380,7 +426,7 @@ const NewReview = () => {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
                 <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${saveHistory ? 'text-sec' : 'text-amber-500'}`}>
-                  {saveHistory ? 'History' : 'Private'}
+                  {saveHistory ? 'Temp' : 'Private'}
                 </span>
                 <button
                   onClick={() => setSaveHistory(!saveHistory)}
@@ -456,6 +502,14 @@ const NewReview = () => {
                 <Code className="h-3.5 w-3.5 text-primary-500" />
                 Technical Environment
               </div>
+              <button
+                onClick={handleClear}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-red-500/10 text-sec hover:text-red-500 transition-all text-[9px] font-black uppercase tracking-wider group"
+                title="Clear Workspace"
+              >
+                <Trash2 className="h-3 w-3 group-hover:scale-110 transition-transform" />
+                Clear
+              </button>
             </div>
             <div className="flex-1 bg-main relative">
               <Editor

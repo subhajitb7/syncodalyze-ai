@@ -23,9 +23,6 @@ export const summarizeFile = async (req, res) => {
   const { fileId } = req.body;
   try {
     const settings = await getSettings();
-    if (settings.maintenanceMode) {
-      return res.status(503).json({ message: 'Platform is currently in Maintenance Mode. AI features are temporarily disabled.' });
-    }
 
     const file = await CodeFile.findById(fileId);
     if (!file) return res.status(404).json({ message: 'File not found' });
@@ -70,9 +67,6 @@ export const summarizeSnippet = async (req, res) => {
 
   try {
     const settings = await getSettings();
-    if (settings.maintenanceMode) {
-      return res.status(503).json({ message: 'Platform is currently in Maintenance Mode. AI features are temporarily disabled.' });
-    }
 
     const prompt = `Summarize the logic and purpose of the following code in exactly 3 concise bullet points. Be technical but understandable.\n\nTitle: ${title || 'Snippet'}\nCode:\n\`\`\`${language || ''}\n${codeSnippet}\n\`\`\``;
     const systemPrompt = 'You are an elite Technical Architect. Summarize code logic with extreme precision and technical density. No conversational filler.';
@@ -97,9 +91,6 @@ export const summarizeSnippet = async (req, res) => {
 export const getDeveloperInsights = async (req, res) => {
   try {
     const settings = await getSettings();
-    if (settings.maintenanceMode) {
-      return res.status(503).json({ message: 'Platform is currently in Maintenance Mode. AI features are temporarily disabled.' });
-    }
 
     const userId = req.user._id;
     const reviews = await Review.find({ user: userId }).select('aiFeedback aiTags bugsFound createdAt').sort({ createdAt: -1 }).limit(10);
@@ -134,9 +125,6 @@ export const generateReviewEmail = async (req, res) => {
   const { reviewId } = req.body;
   try {
     const settings = await getSettings();
-    if (settings.maintenanceMode) {
-      return res.status(503).json({ message: 'Platform is currently in Maintenance Mode. AI features are temporarily disabled.' });
-    }
 
     const review = await Review.findById(reviewId);
     if (!review) return res.status(404).json({ message: 'Review not found' });
