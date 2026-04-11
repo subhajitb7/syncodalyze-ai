@@ -81,10 +81,9 @@ const CommentSection = ({
     if (!text.trim()) return;
 
     try {
-      const { data } = await axios.post(`/api/${contextType}/${contextId}/comments`, {
+      await axios.post(`/api/${contextType}/${contextId}/comments`, {
         text: text.trim(),
       });
-      setComments((prev) => [...prev, data]);
       setText('');
     } catch (err) {
       console.error('Failed to post comment:', err);
