@@ -5,7 +5,7 @@ import App from './App.jsx';
 
 import axios from "axios";
 
-axios.defaults.baseURL = "http://13.126.242.51:5000";
+axios.defaults.baseURL = "https://api.subhajitbag.in";
 axios.defaults.withCredentials = true;
 
 createRoot(document.getElementById('root')).render(
