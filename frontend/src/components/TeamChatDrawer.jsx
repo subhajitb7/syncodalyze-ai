@@ -94,7 +94,10 @@ const TeamChatDrawer = ({ teamId, isOpen, onClose }) => {
 
     try {
       const { data } = await axios.post(`/api/messages/${teamId}`, { text: text.trim() });
-      setMessages(prev => [...prev, data]);
+      setMessages(prev => {
+        if (prev.find(m => m._id === data._id)) return prev;
+        return [...prev, data];
+      });
       setText('');
       if (socket) socket.emit('stopTyping', { roomId: socketRoom, userName: user.name });
     } catch (err) {

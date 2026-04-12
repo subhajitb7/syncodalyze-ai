@@ -81,7 +81,10 @@ const CommentSection = ({
       const { data } = await axios.post(`/api/${contextType}/${contextId}/comments`, {
         text: text.trim(),
       });
-      setComments(prev => [...prev, data]);
+      setComments(prev => {
+        if (prev.find(c => c._id === data._id)) return prev;
+        return [...prev, data];
+      });
       setText('');
     } catch (err) {
       console.error('Failed to post comment:', err);
