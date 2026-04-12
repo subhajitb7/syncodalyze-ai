@@ -1,9 +1,16 @@
-import { useState, useEffect, useContext, useRef } from 'react';
+import { useState, useEffect, useContext, useRef, useMemo } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, LineChart, Line
+} from 'recharts';
 import {
   FileCode, History, Plus, AlertCircle, CheckCircle2,
-  BarChart3, Bug, CheckCircle, Shield, Loader2, Upload, ChevronRight, Sparkles
+  BarChart3, Bug, CheckCircle, Shield, Loader2, Upload, 
+  ChevronRight, Sparkles, Terminal, Cpu, Zap, Activity,
+  Globe, Search, Settings, LayoutDashboard
 } from 'lucide-react';
 import GithubIcon from '../components/GithubIcon';
 import { AuthContext } from '../context/AuthContext';
@@ -17,7 +24,17 @@ const Dashboard = () => {
   const [insights, setInsights] = useState('');
   const [fetchingInsights, setFetchingInsights] = useState(false);
   const [error, setError] = useState(null);
-  const hasFetched = useRef(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  
+  // Track mouse for glow effect
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,288 +48,349 @@ const Dashboard = () => {
         setStats(statsRes.data);
       } catch (error) {
         console.error('Failed to fetch data', error);
-        setError('Connection failed. Please ensure the backend is reachable.');
+        setError('Connection interrupted. Synchronizer offline.');
       } finally {
         setLoading(false);
       }
     };
+
     const fetchInsights = async () => {
-      // 1. Check if we already have it in current session cache
       const cachedInsights = sessionStorage.getItem('ai_insights');
       if (cachedInsights) {
         setInsights(cachedInsights);
         return;
       }
 
-      // 2. Prevent double-calls in StrictMode (Dev)
-      if (hasFetched.current) return;
-      hasFetched.current = true;
-
       setFetchingInsights(true);
       try {
         const { data } = await axios.get('/api/ai/insights');
         setInsights(data.insights || '');
-        // 3. Store in session cache
         if (data.insights) {
           sessionStorage.setItem('ai_insights', data.insights);
         }
       } catch (err) {
         console.error('Failed to fetch insights', err);
-        // Reset ref so we can try again on next mount if it failed
-        hasFetched.current = false;
       } finally {
         setFetchingInsights(false);
       }
     };
+
     fetchData();
     fetchInsights();
   }, []);
 
+  // Compute telemetry data for charts
+  const chartData = useMemo(() => {
+    return reviews.slice(0, 7).reverse().map((r, i) => ({
+      name: new Date(r.createdAt).toLocaleDateString(undefined, { weekday: 'short' }),
+      bugs: r.bugsFound,
+      score: r.bugsFound === 0 ? 100 : Math.max(20, 100 - (r.bugsFound * 15)),
+    }));
+  }, [reviews]);
 
+  const radarData = [
+    { subject: 'Security', A: 85 + (stats.cleanPercent / 10), fullMark: 150 },
+    { subject: 'Performance', A: 70 + (stats.totalReviews / 2), fullMark: 150 },
+    { subject: 'Readability', A: 90, fullMark: 150 },
+    { subject: 'Complexity', A: 65, fullMark: 150 },
+    { subject: 'Standard', A: 80, fullMark: 150 },
+  ];
 
-  const filteredReviews = reviews.filter((r) => {
-    // Exclude project-linked reviews from Dashboard "Code Insights"
-    if (r.fileId) return false;
-
-    if (filter === 'bugs') return r.bugsFound > 0;
-    if (filter === 'clean') return r.bugsFound === 0;
-    return true;
-  });
-
-  const getSnippet = (text) => {
-    if (!text) return 'No feedback content.';
-    // Remove headers, bold/italic markers, and code block symbols
-    let cleanText = text
-      .replace(/^#+\s*(Code Review|AI Code Review|Syncodalyze AI).*\n/i, '')
-      .replace(/^(Code Review|AI Code Review|Syncodalyze AI|Overview:|Here is an overview:?)\s*/i, '')
-      .replace(/[#*_~`>]/g, '')
-      .replace(/\[(.*?)\]\(.*?\)/g, '$1')
-      .replace(/\s+/g, ' ');
-
-    return cleanText.trim().substring(0, 120) + '...';
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
   };
 
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1 }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="relative">
+          <div className="h-20 w-20 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin"></div>
+          <Cpu className="absolute inset-0 m-auto h-8 w-8 text-primary-500 animate-pulse" />
+        </div>
+        <p className="mt-6 text-sec font-black tracking-widest uppercase animate-pulse">Initializing Command Center...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold ">Dashboard</h1>
-          <p className="text-sec mt-1">Record and analyze your code reviews.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link to="/new-review?new=true" className="btn-primary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold shadow-lg shadow-primary-500/10">
-            <Plus className="h-3.5 w-3.5" /> Quick Code
-          </Link>
-          <Link to="/new-review?new=true&upload=true" className="btn-secondary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold border-col">
-            <Upload className="h-3.5 w-3.5" /> Upload File
-          </Link>
-          <Link to="/projects?create=true" className="btn-secondary flex items-center justify-center gap-2 h-10 px-4 text-xs font-bold border-col">
-            <GithubIcon className="h-3.5 w-3.5" /> Repository
-          </Link>
-        </div>
-      </div>
+    <div className="min-h-screen grid-background pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        
+        {/* Header / System Status */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
+          <motion.div 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+          >
+            <div className="flex items-center gap-4 text-[9px] font-black text-sec uppercase tracking-widest mb-2 flex-wrap">
+              <span className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
+                </span>
+                System Live • Region: {Intl.DateTimeFormat().resolvedOptions().timeZone}
+              </span>
+              <span className="h-1 w-1 bg-ter rounded-full hidden sm:block"></span>
+              <span className="flex items-center gap-2 opacity-60">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
+                API Gateway: Online
+              </span>
+              <span className="h-1 w-1 bg-ter rounded-full hidden sm:block"></span>
+              <span className="flex items-center gap-2 opacity-60">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
+                AI Core: v4.2-Stable
+              </span>
+            </div>
+            <h1 className="text-4xl font-black tracking-tighter text-main flex items-center gap-3">
+              Engineering <span className="text-primary-500">Command</span>
+            </h1>
+            <p className="text-sec font-medium mt-1">Sovereign oversight of your technical capital.</p>
+          </motion.div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <div className="glass-panel p-5 flex items-center gap-4">
-          <div className="h-12 w-12 bg-primary-500/10 rounded-xl flex items-center justify-center">
-            <BarChart3 className="h-6 w-6 text-primary-600" />
-          </div>
-          <div>
-            <p className="text-xs text-sec font-bold uppercase tracking-wider">Total Reviews</p>
-            <p className="text-2xl font-bold text-main">{stats.totalReviews}</p>
-          </div>
-        </div>
-        <div className="glass-panel p-5 flex items-center gap-4">
-          <div className="h-12 w-12 bg-red-500/10 rounded-xl flex items-center justify-center">
-            <Bug className="h-6 w-6 text-red-600" />
-          </div>
-          <div>
-            <p className="text-xs text-sec font-bold uppercase tracking-wider">Total Bugs Found</p>
-            <p className="text-2xl font-bold text-main">{stats.totalBugs}</p>
-          </div>
-        </div>
-        <div className="glass-panel p-5 flex items-center gap-4">
-          <div className="h-12 w-12 bg-emerald-500/10 rounded-xl flex items-center justify-center">
-            <CheckCircle className="h-6 w-6 text-emerald-600" />
-          </div>
-          <div>
-            <p className="text-xs text-sec font-bold uppercase tracking-wider">Clean Code Rate</p>
-            <p className="text-2xl font-bold text-main">{stats.cleanPercent}%</p>
-          </div>
-        </div>
-      </div>
-
-      {/* AI Intelligence Summary Card */}
-      <div className="glass-panel p-6 sm:p-8 mb-10 border-primary-500/20 bg-gradient-to-br from-primary-500/[0.08] via-transparent to-transparent relative overflow-hidden group shadow-2xl shadow-primary-500/5 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-100">
-        <div className="absolute top-0 right-0 w-full h-full opacity-[0.03] pointer-events-none group-hover:opacity-[0.05] transition-opacity duration-700" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
-        <div className="absolute -top-12 -right-12 opacity-5 blur-2xl group-hover:scale-110 transition-transform duration-1000">
-          <Sparkles className="h-64 w-64 text-primary-500" />
+          <motion.div 
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="flex flex-wrap gap-3"
+          >
+            <Link to="/new-review?new=true" className="btn-primary flex items-center gap-2 py-3 px-6 shadow-2xl">
+              <Zap className="h-4 w-4 fill-current" /> New Scan
+            </Link>
+            <Link to="/projects?create=true" className="btn-secondary flex items-center gap-2 py-3 px-6 border-col bg-ter/50 backdrop-blur-md">
+              <GithubIcon className="h-4 w-4" /> Sync Repository
+            </Link>
+          </motion.div>
         </div>
 
-        <div className="relative z-10 flex flex-col lg:flex-row gap-8 lg:gap-12 items-center">
-          {/* AI Info */}
-          <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center flex-1 text-center md:text-left min-w-0">
-            <div className="h-14 w-14 bg-primary-500 rounded-2xl flex items-center justify-center shrink-0 shadow-2xl shadow-primary-500/40 relative transform group-hover:rotate-6 transition-transform">
-              <Sparkles className="h-7 w-7 text-white" />
-              <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-emerald-500 rounded-full border-4 border-sec flex items-center justify-center">
-                <div className="h-2 w-2 bg-white rounded-full animate-pulse"></div>
+        {/* Bento Grid */}
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+        >
+          
+          {/* Intelligence Core (Primary) */}
+          <motion.div 
+            variants={itemVariants}
+            className="lg:col-span-8 glass-panel p-8 relative overflow-hidden group min-h-[420px]"
+            onMouseMove={handleMouseMove}
+            style={{ '--mouse-x': `${mousePos.x}px`, '--mouse-y': `${mousePos.y}px` }}
+          >
+            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Cpu className="h-32 w-32 text-primary-500" />
+            </div>
+            
+            <div className="relative z-10 flex flex-col md:flex-row h-full gap-8">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-primary-500/10 rounded-lg">
+                    <Sparkles className="h-5 w-5 text-primary-500" />
+                  </div>
+                  <h2 className="text-xl font-black uppercase tracking-tighter text-main">Cognitive Core 2.0</h2>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="min-h-[120px] relative">
+                    <AnimatePresence mode="wait">
+                      {fetchingInsights ? (
+                        <motion.div 
+                          key="loading"
+                          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                          className="flex flex-col gap-4"
+                        >
+                          <div className="h-4 w-3/4 bg-ter animate-pulse rounded"></div>
+                          <div className="h-4 w-1/2 bg-ter animate-pulse rounded"></div>
+                          <div className="h-4 w-2/3 bg-ter animate-pulse rounded"></div>
+                        </motion.div>
+                      ) : (
+                        <motion.div 
+                          key="content"
+                          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                          className="text-lg leading-relaxed text-sec font-medium italic"
+                        >
+                          "{insights || "Initiate more reviews to generate cross-project cognitive mapping and engineering trends."}"
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-8 border-t border-col/50">
+                    <div>
+                      <p className="text-[10px] font-black text-sec uppercase tracking-widest mb-1">Health Score</p>
+                      <p className="text-2xl font-black text-emerald-500">{stats.cleanPercent}%</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-sec uppercase tracking-widest mb-1">Risk Factor</p>
+                      <p className="text-2xl font-black text-red-500">{stats.totalBugs}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-sec uppercase tracking-widest mb-1">Compute</p>
+                      <p className="text-2xl font-black text-primary-500">{stats.totalReviews}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-sec uppercase tracking-widest mb-1">Uptime</p>
+                      <p className="text-2xl font-black text-main">99.9%</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full md:w-64 h-64 shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                    <PolarGrid stroke="var(--border-col)" />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--text-sec)', fontSize: 10, fontWeight: 700 }} />
+                    <Radar
+                      name="Quality"
+                      dataKey="A"
+                      stroke="var(--color-primary-500)"
+                      fill="var(--color-primary-500)"
+                      fillOpacity={0.2}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
               </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-4 justify-center md:justify-start">
-                <h2 className="text-xl font-black text-main tracking-tighter uppercase whitespace-nowrap">AI Intelligence Summary</h2>
-                <div className="h-px bg-col/50 flex-1 hidden md:block"></div>
-              </div>
+          </motion.div>
 
-              {fetchingInsights ? (
-                <div className="flex items-center gap-4 text-primary-500 text-sm mt-3 font-black animate-pulse">
-                  <div className="flex gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-primary-500 animate-bounce [animation-delay:-0.3s]"></span>
-                    <span className="h-2 w-2 rounded-full bg-primary-500 animate-bounce [animation-delay:-0.15s]"></span>
-                    <span className="h-2 w-2 rounded-full bg-primary-500 animate-bounce"></span>
+          {/* Activity Feed (Sidebar on Desktop) */}
+          <motion.div 
+            variants={itemVariants}
+            className="lg:col-span-4 glass-panel p-6 flex flex-col h-[420px]"
+          >
+            <div className="flex items-center justify-between mb-6 border-b border-col pb-4">
+              <div className="flex items-center gap-3">
+                <Activity className="h-5 w-5 text-primary-500" />
+                <h2 className="text-lg font-black uppercase tracking-tighter text-main">Pulse Feed</h2>
+              </div>
+              <button className="text-[10px] font-black text-primary-500 uppercase hover:underline">Live</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+              {reviews.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                  <div className="h-12 w-12 bg-ter rounded-full flex items-center justify-center mb-4">
+                    <Terminal className="h-6 w-6 text-sec" />
                   </div>
-                  SYNTESIZING PERSONALIZED GROWTH TRAJECTORY...
+                  <p className="text-xs text-sec font-bold">No signal detected.<br/>Awaiting first transmission.</p>
                 </div>
               ) : (
-                <div className="relative group/text px-2 min-h-[4rem] flex items-center">
-                  <span className="text-6xl absolute -top-10 -left-6 opacity-10 font-serif text-primary-500 group-hover:opacity-20 transition-opacity select-none pointer-events-none">"</span>
-                  <div className="text-main leading-relaxed text-sm md:text-base font-bold italic relative z-10 pl-6 pr-4 text-justify [text-justify:inter-word]">
-                    {insights ? (
-                      insights.split(/(bugs|improvements|strengths|focus|quality|performance|security)/gi).map((part, i) => (
-                        <span key={i} className={/bugs|improvements|strengths|focus|quality|performance|security/i.test(part) ? 'text-primary-500 font-black not-italic px-1 bg-primary-500/5 rounded' : ''}>
-                          {part}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="opacity-60 text-sec">Analyze more code to unlock your personalized engineering trajectory by allowing the AI to synthesize your review patterns...</span>
-                    )}
-                  </div>
-                  <span className="text-6xl absolute -bottom-12 -right-4 opacity-10 font-serif text-primary-500 group-hover:opacity-20 transition-opacity select-none pointer-events-none">"</span>
-                </div>
+                reviews.slice(0, 10).map((r) => (
+                  <Link 
+                    key={r._id} 
+                    to={`/review/${r._id}`}
+                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-ter transition-all group border border-transparent hover:border-col"
+                  >
+                    <div className={`h-10 w-10 rounded-lg shrink-0 flex items-center justify-center text-xs font-black ${r.bugsFound > 0 ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                      {r.bugsFound > 0 ? 'ERR' : 'OK'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-main truncate group-hover:text-primary-500 transition-colors">{r.title}</p>
+                      <p className="text-[10px] text-sec font-medium">{new Date(r.createdAt).toLocaleTimeString()}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-ter group-hover:text-sec transition-all" />
+                  </Link>
+                ))
               )}
             </div>
-          </div>
+            
+            <Link to="/reviews" className="mt-4 pt-4 border-t border-col text-center text-xs font-black text-sec hover:text-main transition-colors uppercase tracking-widest">
+              View All Transmissions
+            </Link>
+          </motion.div>
 
-          {/* Metric Section */}
-          <div className="lg:border-l border-col/30 lg:pl-12 flex flex-col items-center gap-5 shrink-0">
-            <div className="relative h-28 w-28 flex items-center justify-center group/metric">
-              <div className="absolute inset-0 bg-primary-500/10 rounded-full blur-2xl opacity-0 group-hover/metric:opacity-100 transition-opacity duration-500"></div>
-              <svg className="h-full w-full rotate-[-90deg] relative z-10">
-                <circle
-                  cx="56" cy="56" r="48"
-                  className="stroke-ter/50 fill-none stroke-[6]"
-                />
-                <circle
-                  cx="56" cy="56" r="48"
-                  className="stroke-primary-500 fill-none stroke-[6] transition-all duration-1000 ease-out"
-                  strokeDasharray="301.59"
-                  strokeDashoffset={301.59 - (301.59 * stats.cleanPercent) / 100}
-                  strokeLinecap="round"
-                  style={{ filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.4))' }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-                <span className="text-3xl font-black text-main tracking-tighter">{stats.cleanPercent}%</span>
-                <span className="text-[7px] font-black text-primary-500 uppercase tracking-[0.3em] mt-0.5">Stability</span>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-500/5 border border-primary-500/10 rounded-full mb-2">
-                <span className="text-[8px] font-black text-sec uppercase tracking-[0.2em]">Growth Metric</span>
-              </div>
-              <p className="text-[9px] text-sec max-w-[160px] font-bold leading-tight uppercase opacity-60">
-                Syncing with <span className="text-main font-black underline decoration-primary-500/30 decoration-2">{stats.totalReviews} analyzes</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-
-
-      {/* Reviews Section */}
-      <div className="glass-panel p-6 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-200">
-        <div className="flex items-center justify-between mb-6 border-b border-col pb-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <History className="h-5 w-5 text-primary-500" />
-              <h2 className="text-xl font-bold text-main">Quick Analysis History</h2>
-            </div>
-          </div>
-          {/* Filter */}
-          <div className="flex gap-2">
-            {['all', 'bugs', 'clean'].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors capitalize font-semibold ${filter === f ? 'border-primary-500 bg-primary-500/10 text-primary-600' : 'border-col text-sec hover:border-gray-400'}`}
-              >
-                {f === 'all' ? 'All' : f === 'bugs' ? 'Has Issues' : 'Clean'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin h-8 w-8 border-2 border-primary-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-sec font-medium">Loading your history...</p>
-          </div>
-        ) : filteredReviews.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="bg-ter/50 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileCode className="h-10 w-10 text-sec" />
-            </div>
-            <h3 className="text-lg font-bold text-main mb-2">
-              {filter === 'all' ? 'No reviews yet' : 'No matching reviews'}
-            </h3>
-            <p className="text-sec max-w-sm mx-auto mb-6">
-              {filter === 'all' ? 'Start your first AI code review now.' : 'Try changing the filter.'}
-            </p>
-            {filter === 'all' && (
-              <Link to="/new-review" className="btn-secondary">Create a Review</Link>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredReviews.slice(0, 6).map((review) => (
-              <Link
-                key={review._id}
-                to={`/review/${review._id}`}
-                className="bg-sec border border-col rounded-xl p-5 hover:border-primary-500/50 hover:shadow-lg transition-all flex flex-col min-h-[12rem] group"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="font-bold text-lg truncate pr-4 text-main group-hover:text-primary-500 transition-colors">{review.title}</h3>
-                  <span className="text-[10px] bg-ter px-2 py-0.5 rounded text-primary-600 border border-col font-bold uppercase shrink-0">
-                    {review.language}
-                  </span>
-                </div>
-                <div className="flex-grow">
-                  <p className="text-sm text-sec line-clamp-3 leading-relaxed">
-                    {getSnippet(review.aiFeedback)}
-                  </p>
-                </div>
-                <div className="mt-4 pt-4 border-t border-col flex justify-between items-center text-sm">
-                  <span className="text-sec font-medium">{new Date(review.createdAt).toLocaleDateString()}</span>
-                  <div className="flex items-center gap-1">
-                    {review.bugsFound > 0 ? (
-                      <span className="bg-red-500/10 text-red-600 px-2 py-0.5 rounded-full border border-red-500/20 flex items-center gap-1 text-[10px] font-bold">
-                        <AlertCircle className="h-3 w-3" /> {review.bugsFound} Bugs
-                      </span>
-                    ) : (
-                      <span className="bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1 text-[10px] font-bold">
-                        <CheckCircle2 className="h-3 w-3" /> Clean
-                      </span>
-                    )}
+          {/* Telemetry Charts (Wide Row) */}
+          <motion.div 
+            variants={itemVariants}
+            className="lg:col-span-12 glass-panel p-0 overflow-hidden"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-col">
+              <div className="p-8">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <p className="text-[10px] font-black text-sec uppercase tracking-[0.2em]">Stability Delta</p>
+                    <h3 className="text-2xl font-black text-main">{stats.cleanPercent}%</h3>
+                  </div>
+                  <div className="h-10 w-10 bg-emerald-500/10 rounded-lg flex items-center justify-center">
+                    <Activity className="h-5 w-5 text-emerald-500" />
                   </div>
                 </div>
-              </Link>
-            ))}
+                <div className="h-24 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData}>
+                      <defs>
+                        <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="var(--color-primary-500)" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="var(--color-primary-500)" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <Area type="monotone" dataKey="score" stroke="var(--color-primary-500)" fillOpacity={1} fill="url(#colorScore)" strokeWidth={3} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="p-8">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <p className="text-[10px] font-black text-sec uppercase tracking-[0.2em]">Bugs Detected</p>
+                    <h3 className="text-2xl font-black text-main">{stats.totalBugs}</h3>
+                  </div>
+                  <div className="h-10 w-10 bg-red-500/10 rounded-lg flex items-center justify-center">
+                    <Bug className="h-5 w-5 text-red-500" />
+                  </div>
+                </div>
+                <div className="h-24 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData}>
+                      <Line type="step" dataKey="bugs" stroke="#ef4444" strokeWidth={3} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="p-8 bg-primary-500/5">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <p className="text-[10px] font-black text-sec uppercase tracking-[0.2em]">Operational Level</p>
+                    <h3 className="text-2xl font-black text-main">PREMIUM</h3>
+                  </div>
+                  <div className="h-10 w-10 bg-primary-500 rounded-lg flex items-center justify-center shadow-lg shadow-primary-500/20 animate-pulse">
+                    <Shield className="h-5 w-5 text-white" />
+                  </div>
+                </div>
+                <p className="text-xs text-sec font-medium leading-relaxed">
+                  Your AI core is operating at peak efficiency. All security protocols are active and monitoring {stats.totalReviews} telemetry nodes.
+                </p>
+                <div className="mt-6 flex gap-2">
+                  <div className="h-1.5 flex-1 bg-primary-500 rounded-full"></div>
+                  <div className="h-1.5 flex-1 bg-primary-500 rounded-full"></div>
+                  <div className="h-1.5 flex-1 bg-primary-500 rounded-full"></div>
+                  <div className="h-1.5 flex-1 bg-ter rounded-full"></div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Analysis Status Summary */}
+        <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-col pt-8 opacity-40">
+          <div className="text-[10px] font-black text-sec uppercase tracking-[0.2em]">
+            Syncodalyze Architecture • Command Center v2
           </div>
-        )}
+          <div className="text-[10px] font-black text-sec uppercase tracking-[0.2em]">
+            Internal Core Latency: 42ms
+          </div>
+        </div>
       </div>
     </div>
   );

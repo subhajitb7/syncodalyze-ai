@@ -14,7 +14,7 @@ import ReviewHistory from './pages/ReviewHistory';
 import Projects from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
 import FileViewer from './pages/FileViewer';
-import Analytics from './pages/Analytics';
+
 import AdminPanel from './pages/AdminPanel';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -67,7 +67,7 @@ function AppContent() {
             <Route path="/projects" element={<PrivateRoute><Projects /></PrivateRoute>} />
             <Route path="/projects/:id" element={<PrivateRoute><ProjectDetail /></PrivateRoute>} />
             <Route path="/projects/:id/files/:fileId" element={<PrivateRoute><FileViewer /></PrivateRoute>} />
-            <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
+            <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
             <Route path="/teams" element={<PrivateRoute><Teams /></PrivateRoute>} />
             <Route path="/teams/:id" element={<PrivateRoute><TeamDetail /></PrivateRoute>} />
             <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />

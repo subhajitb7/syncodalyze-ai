@@ -51,6 +51,11 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    nodeId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
   },
   {
     timestamps: true,

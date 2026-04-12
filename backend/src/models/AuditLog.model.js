@@ -5,7 +5,7 @@ const auditLogSchema = mongoose.Schema(
     action: {
       type: String,
       required: true,
-      enum: ['DELETE_USER', 'UPDATE_ROLE', 'SUSPEND_USER', 'UNSUSPEND_USER', 'UPDATE_SETTINGS', 'SYSTEM_MAINTENANCE']
+      enum: ['DELETE_USER', 'UPDATE_ROLE', 'SUSPEND_USER', 'UNSUSPEND_USER', 'UPDATE_SETTINGS', 'SYSTEM_MAINTENANCE', 'INSPECT_CODE', 'PURGE_ANALYSIS', 'ACCOUNT_TERMINATED']
     },
     actor: {
       type: mongoose.Schema.Types.ObjectId,

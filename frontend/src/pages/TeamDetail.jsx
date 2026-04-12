@@ -13,7 +13,7 @@ const TeamDetail = () => {
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showInvite, setShowInvite] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteIdentifier, setInviteIdentifier] = useState('');
   const [showLinkProject, setShowLinkProject] = useState(false);
   const [myProjects, setMyProjects] = useState([]);
   const [error, setError] = useState(null);
@@ -47,10 +47,10 @@ const TeamDetail = () => {
     e.preventDefault();
     setError(null);
     try {
-      const { data } = await axios.post(`/api/teams/${id}/invite`, { email: inviteEmail });
+      const { data } = await axios.post(`/api/teams/${id}/invite`, { identifier: inviteIdentifier });
       setTeam(data);
       setShowInvite(false);
-      setInviteEmail('');
+      setInviteIdentifier('');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to invite');
     }
@@ -163,7 +163,7 @@ const TeamDetail = () => {
           {canManage && (
             <>
               <button onClick={() => setShowInvite(true)} className="btn-primary flex items-center gap-2 text-sm px-6">
-                <UserPlus className="h-4 w-4" /> Invite
+                <UserPlus className="h-4 w-4" /> Recruit Specialist
               </button>
               <button onClick={openLinkProject} className="btn-secondary flex items-center gap-2 text-sm px-6">
                 <FolderOpen className="h-4 w-4" /> Link Project
@@ -284,12 +284,19 @@ const TeamDetail = () => {
             <button onClick={() => { setShowInvite(false); setError(null); }} className="absolute top-4 right-4 text-sec hover:text-main">
               <X className="h-5 w-5" />
             </button>
-            <h2 className="text-2xl font-bold text-main mb-2">Invite Member</h2>
-            <p className="text-sec text-sm mb-6 font-medium">Enter the email of a registered user.</p>
+            <h2 className="text-2xl font-bold text-main mb-2">Recruit Member</h2>
+            <p className="text-sec text-sm mb-6 font-medium">Enter the Email or the unique <span className="text-primary-500 font-black">Node Hash (ID)</span> of a registered user.</p>
             {error && <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-lg mb-4 text-sm">{error}</div>}
             <form onSubmit={handleInvite} className="flex flex-col gap-4">
-              <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} required className="glass-input" placeholder="user@example.com" />
-              <button type="submit" className="btn-primary">Send Invite</button>
+              <input 
+                type="text" 
+                value={inviteIdentifier} 
+                onChange={(e) => setInviteIdentifier(e.target.value)} 
+                required 
+                className="glass-input" 
+                placeholder="user@email.com or SYN-A28-9X6..." 
+              />
+              <button type="submit" className="btn-primary">Initialize Recruitment</button>
             </form>
           </div>
         </div>

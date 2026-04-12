@@ -97,46 +97,58 @@ body {
     background-color: var(--border-col);
   }
 
-  .text-main {
-    color: var(--text-main);
-  }
+  .text-main { color: var(--text-main); }
+  .text-sec { color: var(--text-sec); }
+  .bg-main { background-color: var(--bg-main); }
+  .bg-sec { background-color: var(--bg-sec); }
+  .bg-ter { background-color: var(--bg-ter); }
+  .border-col { border-color: var(--border-col); }
 
-  .text-sec {
-    color: var(--text-sec);
-  }
-
-  .bg-main {
-    background-color: var(--bg-main);
-  }
-
-  .bg-sec {
-    background-color: var(--bg-sec);
-  }
-
-  .bg-ter {
-    background-color: var(--bg-ter);
-  }
-
-  .border-col {
-    border-color: var(--border-col);
-  }
-
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 5px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
+  .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background: var(--border-col);
     border-radius: 10px;
   }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--color-primary-500); }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: var(--color-primary-500);
+  .grid-background {
+    background-image: radial-gradient(var(--border-col) 1px, transparent 1px);
+    background-size: 30px 30px;
   }
+
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite linear;
+  }
+
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+
+  .glow-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glow-card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: radial-gradient(
+      circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(59, 130, 246, 0.15),
+      transparent 40%
+    );
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .glow-card:hover::before { opacity: 1; }
 }
 
 /* btn-primary - written as plain CSS to avoid @apply issues with hover gradient stops */

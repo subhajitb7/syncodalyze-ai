@@ -1,9 +1,11 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useContext, useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from '../context/AuthContext';
 import {
   LogOut, User as UserIcon, Shield, ChevronDown,
-  Users, FileText, BarChart3, Brain, FolderOpen, LayoutDashboard, Menu, X, Sun, Moon, History
+  Users, FolderOpen, LayoutDashboard, Menu, X, 
+  Sun, Moon, History, Settings
 } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import NotificationBell from './NotificationBell';
@@ -32,7 +34,6 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleOutside);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/');
@@ -41,197 +42,174 @@ const Navbar = () => {
   const NavLink = ({ to, label, icon: Icon, mobile }) => {
     const active = isActive(to);
     return (
-      <Link to={to} className={`flex items-center gap-1.5 text-sm font-medium transition-colors relative whitespace-nowrap ${mobile ? 'px-4 py-3 hover:bg-sec w-full' : 'pb-0.5'
-        } ${active ? 'text-main' : 'text-sec hover:text-main'}`}>
-        {Icon && <Icon className="h-3.5 w-3.5" />}
+      <Link 
+        to={to} 
+        className={`flex items-center gap-2 text-[10px] sm:text-[11px] font-black transition-all relative whitespace-nowrap tracking-[0.2em] uppercase ${
+          mobile ? 'px-8 py-5 hover:bg-sec/10 border-b border-col/30' : 'px-4 py-2'
+        } ${active ? 'text-primary-500' : 'text-sec hover:text-main'}`}
+      >
         {label}
-        {active && !mobile && <span className="absolute -bottom-[17px] left-0 right-0 h-[2px] bg-primary-500 rounded-full"></span>}
+        {active && !mobile && (
+          <motion.div 
+            layoutId="nav-line"
+            className="absolute -bottom-[21px] left-0 right-0 h-0.5 bg-primary-500"
+            transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+          />
+        )}
       </Link>
     );
   };
 
-  const primaryLinks = [
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/projects', label: 'Projects', icon: FolderOpen },
-    { to: '/teams', label: 'Teams', icon: Users },
-    { to: '/reviews', label: 'Code Insights', icon: History },
-    { to: '/analytics', label: 'Analytics', icon: BarChart3 },
+  const navLinks = [
+    { to: '/dashboard', label: 'Monitor' },
+    { to: '/projects', label: 'Projects' },
+    { to: '/teams', label: 'Teams' },
+    { to: '/reviews', label: 'Insights' },
   ];
 
   return (
     <>
-      <nav className="border-b border-col bg-main/80 backdrop-blur-md fixed top-0 left-0 right-0 z-[100] w-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Left: Logo (Anchored Left) */}
-            <div className="flex-1 flex items-center">
-              <Link to="/" className="flex items-center gap-2 group shrink-0 -ml-1">
-                <div className="transition-all group-hover:shadow-[0_0_20px_rgba(59,130,246,0.1)] rounded-xl">
-                  <img src="/logo.png" alt="Syncodalyze Logo" className="h-10 w-10 object-contain" />
+      <nav className="border-b border-col bg-main/90 backdrop-blur-2xl fixed top-0 left-0 right-0 z-[100] w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="flex items-center justify-between h-16 md:h-16">
+            
+            {/* Left: Logo Section */}
+            <div className="flex items-center shrink-0">
+              <Link to="/" className="flex items-center gap-3 group">
+                <div className="h-8 w-8 bg-primary-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
+                   <img src="/premium_logo_v2.png" alt="S" className="h-5 w-5 brightness-0 invert" 
+                        onError={(e) => { e.target.src = "/logo.png"; }} />
                 </div>
-                <span className='text-3xl font-black tracking-tighter flex items-center gap-0.5 group-hover:scale-[1.02] transition-transform'>
-                  <span className="bg-gradient-to-r from-[var(--text-main)] to-primary-400 bg-clip-text text-transparent">Syncodalyze</span>
-                  <span className="text-primary-500">AI</span>
+                <span className="text-lg lg:text-xl font-black tracking-tighter text-main uppercase">
+                  Syncodalyze <span className="text-primary-500">AI</span>
                 </span>
               </Link>
             </div>
 
-            {/* Center: Primary Navigation (Mathematically Centered) */}
+            {/* Center: Navigation Links (Desktop) */}
             {user && (
-              <div className="hidden lg:flex items-center justify-center gap-6">
-                {primaryLinks.map((l) => <NavLink key={l.to} {...l} />)}
-                {isAdmin && (
-                  <Link
-                    to="/admin"
-                    className={`flex items-center gap-1.5 text-sm font-medium px-2.5 py-1 rounded-md transition-all ${isActive('/admin')
-                      ? 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/30'
-                      : 'text-yellow-400/80 hover:bg-yellow-500/10 hover:text-yellow-400'
-                      }`}
-                  >
-                    <Shield className="h-3.5 w-3.5" /> Admin
-                  </Link>
-                )}
+              <div className="hidden lg:flex items-center absolute left-1/2 -translate-x-1/2">
+                <div className="flex items-center gap-2">
+                  {navLinks.map((link) => <NavLink key={link.to} {...link} />)}
+                </div>
               </div>
             )}
 
-            {/* Right: Actions (Anchored Right) */}
-            <div className="flex-1 flex items-center justify-end gap-2 shrink-0">
-              {/* Theme Toggle */}
-              <button
-                onClick={toggleTheme}
-                className="p-2 text-sec hover:text-primary-600 hover:bg-primary-500/10 rounded-lg transition-all mr-1"
-                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              >
-                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </button>
-
+            {/* Right: Actions Section */}
+            <div className="flex items-center gap-2 shrink-0">
               {user ? (
-                <>
+                <div className="flex items-center gap-2">
                   <NotificationBell />
-                  {/* User Profile Dropdown */}
-                  <div className="relative" ref={userMenuRef}>
+                  
+                  <button
+                    onClick={toggleTheme}
+                    className="p-2 text-sec hover:text-main transition-colors"
+                    title="Toggle Theme"
+                  >
+                    {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  </button>
+
+                  <div className="relative ml-2" ref={userMenuRef}>
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      className="flex items-center gap-2 ml-1 shrink-0 p-1 rounded-lg hover:bg-sec transition-all"
+                      className="flex items-center gap-2 group"
                     >
-                      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold ${isAdmin
-                        ? 'bg-yellow-500/15 text-yellow-600 ring-1 ring-yellow-500/30'
-                        : 'bg-primary-500/15 text-primary-600'
-                        }`}>
+                      <div className={`h-8 w-8 rounded-lg flex items-center justify-center text-[10px] font-black transition-all ${
+                        isAdmin 
+                          ? 'bg-yellow-500 text-white' 
+                          : 'bg-primary-500 text-white'
+                      } group-hover:scale-105 transition-transform shadow-md border border-white/10`}>
                         {user.name?.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="hidden xl:block text-left">
-                        <p className="text-sm font-bold text-main leading-tight">{user.name}</p>
-                        <p className={`text-[10px] leading-tight font-medium ${isAdmin ? 'text-yellow-600' : 'text-sec'}`}>
-                          {isAdmin ? '★ Admin' : 'Member'}
-                        </p>
                       </div>
                       <ChevronDown className={`h-3 w-3 text-sec transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 
-                    {userMenuOpen && (
-                      <div className="absolute top-full mt-3 right-0 w-64 glass-panel shadow-2xl overflow-hidden z-50">
-                        <div className="p-4 border-b border-col bg-sec/30">
-                          <p className="text-sm font-bold text-main truncate leading-tight">{user.name}</p>
-                          <p className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${isAdmin ? 'text-yellow-600' : 'text-sec'}`}>
-                            {isAdmin ? 'Administrator' : 'Verified Member'}
-                          </p>
-                        </div>
-                        <div className="p-2">
-                          <Link
-                            to="/profile"
-                            onClick={() => setUserMenuOpen(false)}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 text-sec hover:text-primary-500 hover:bg-primary-500/10 rounded-lg transition-all font-bold text-sm mb-1"
-                          >
-                            <UserIcon className="h-4 w-4" /> My Profile
-                          </Link>
-                          <button
-                            onClick={() => { setShowLogoutConfirm(true); setUserMenuOpen(false); }}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all font-bold text-sm"
-                          >
-                            <LogOut className="h-4 w-4" /> Sign Out
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                    <AnimatePresence>
+                      {userMenuOpen && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="absolute top-full mt-4 right-0 w-56 glass-panel shadow-2xl p-1 border-col overflow-hidden"
+                        >
+                          <div className="p-4 border-b border-col mb-1 bg-ter/30 rounded-xl">
+                             <p className="text-[10px] font-black text-sec uppercase tracking-widest opacity-50 mb-0.5">Session Operator</p>
+                             <p className="text-xs font-black text-main truncate tracking-tight">{user.name}</p>
+                          </div>
+                          
+                          <div className="p-1">
+                            <Link to="/profile" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-[10px] font-black text-sec hover:text-main hover:bg-primary-500/5 rounded-lg transition-all uppercase tracking-widest">
+                              <Settings className="h-3.5 w-3.5" /> Account Settings
+                            </Link>
+                            {isAdmin && (
+                              <Link to="/admin" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-[10px] font-black text-yellow-600 hover:bg-yellow-500/5 rounded-lg transition-all uppercase tracking-widest">
+                                <Shield className="h-3.5 w-3.5" /> Admin Console
+                              </Link>
+                            )}
+                            <div className="h-px bg-col mx-2 my-1"></div>
+                            <button onClick={() => { setShowLogoutConfirm(true); setUserMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[10px] font-black text-rose-500 hover:bg-rose-500/5 rounded-lg transition-all uppercase tracking-widest text-left">
+                              <LogOut className="h-3.5 w-3.5" /> Sign Out
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
-                  {/* Mobile menu toggle */}
-                  <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-2 text-sec hover:text-main transition-colors ml-2">
+                  <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-2 text-sec hover:text-main ml-1">
                     {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                   </button>
-                </>
+                </div>
               ) : (
-                <div className="flex items-center gap-3 sm:gap-4 ml-2">
-                  <Link to="/auth" className="text-sm text-sec hover:text-main transition-colors font-bold whitespace-nowrap">Sign In</Link>
-                  <Link to="/auth" className="btn-primary px-5 py-2.5 text-sm font-bold shadow-lg shadow-primary-500/20 whitespace-nowrap">Get Started</Link>
+                <div className="flex items-center gap-6">
+                  <Link to="/auth" className="text-[11px] font-black uppercase text-sec hover:text-main tracking-widest transition-colors">Sign In</Link>
+                  <Link to="/auth" className="bg-primary-500 text-white px-5 py-2 text-[11px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-primary-500/10 hover:bg-primary-600 transition-all">Get Started</Link>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {user && mobileOpen && (
-          <div className="lg:hidden border-t border-col bg-main shadow-2xl backdrop-blur-md">
-            <div className="p-4 border-b border-col flex items-center gap-3">
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold ${isAdmin ? 'bg-yellow-500/15 text-yellow-600' : 'bg-primary-500/15 text-primary-600'}`}>
-                {user.name?.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <p className="font-bold text-main leading-tight">{user.name}</p>
-                <p className={`text-[10px] font-bold uppercase mt-0.5 ${isAdmin ? 'text-yellow-600' : 'text-sec'}`}>
-                  {isAdmin ? 'Administrator' : 'Verified Member'}
-                </p>
-              </div>
-            </div>
-            {primaryLinks.map((l) => (
-              <NavLink key={l.to} {...l} mobile />
-            ))}
-            {isAdmin && (
-              <>
-                <div className="h-px bg-col mx-4"></div>
-                <Link to="/admin" className="flex items-center gap-2 px-4 py-3 text-sm font-bold text-yellow-600 hover:bg-sec">
-                  <Shield className="h-3.5 w-3.5" /> Admin Panel
-                </Link>
-              </>
-            )}
-            <button
-              onClick={() => setShowLogoutConfirm(true)}
-              className="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-rose-500 hover:bg-rose-500/10"
+        {/* Mobile Nav */}
+        <AnimatePresence>
+          {user && mobileOpen && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="lg:hidden bg-main border-b border-col overflow-hidden"
             >
-              <LogOut className="h-4 w-4" /> Sign Out
-            </button>
-          </div>
-        )}
+              <div className="flex flex-col">
+                {navLinks.map((link) => <NavLink key={link.to} {...link} mobile />)}
+                <div className="p-8 flex flex-col gap-4">
+                   <Link to="/profile" className="text-[10px] font-black text-sec uppercase tracking-widest flex items-center gap-3"><Settings className="h-4 w-4" /> Profile</Link>
+                   <button onClick={() => setShowLogoutConfirm(true)} className="text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-3 text-left"><LogOut className="h-4 w-4" /> Sign Out</button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
-      {/* Logout Confirmation Modal */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in transition-all">
-          <div className="glass-panel w-full max-w-sm p-8 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-white/10 animate-in zoom-in-95 duration-200">
-            <div className="h-16 w-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-rose-500/20">
-              <LogOut className="h-8 w-8 text-rose-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-center text-main mb-2">Are you sure?</h2>
-            <p className="text-sec text-center font-medium mb-8">You will be signed out of your account on this device.</p>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setShowLogoutConfirm(false)}
-                className="btn-secondary h-12 font-bold"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleLogout}
-                className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-rose-500/20 h-12"
-              >
-                Log Out
-              </button>
-            </div>
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="glass-panel w-full max-w-sm p-10 text-center border-col shadow-2xl"
+            >
+              <h2 className="text-xl font-black text-main tracking-tight mb-2 uppercase tracking-wide">End Session?</h2>
+              <p className="text-sec font-medium mb-8 text-xs leading-relaxed max-w-[240px] mx-auto">Are you sure you want to terminate your current node connection?</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => setShowLogoutConfirm(false)} className="btn-secondary h-10 text-[10px] font-black uppercase tracking-widest">Abort</button>
+                <button onClick={handleLogout} className="bg-rose-500 hover:bg-rose-600 text-white rounded-lg h-10 text-[10px] font-black uppercase tracking-widest transition-all">Confirm</button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </>
   );
 };

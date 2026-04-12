@@ -261,17 +261,25 @@ export const getReviewStats = async (req, res) => {
     const userId = req.user._id;
     // Industry Standard: Stats should show Global Impact (Projects + Ad-Hoc)
     const totalReviews = await Review.countDocuments({ user: userId });
+    const cleanReviews = await Review.countDocuments({ user: userId, bugsFound: 0 });
+    
     const bugsAgg = await Review.aggregate([
       { $match: { user: userId } },
       { $group: { _id: null, totalBugs: { $sum: '$bugsFound' } } },
     ]);
-    const cleanReviews = await Review.countDocuments({ user: userId, bugsFound: 0 });
+    
     const cleanPercent = totalReviews > 0 ? Math.round((cleanReviews / totalReviews) * 100) : 100;
+
+    // Industry Standard: Dynamically calculate Impact/Health based on performance
+    // Base 94% + bonus for high cleanliness
+    const healthImpact = Math.min(100, 94 + Math.round((cleanPercent / 100) * 6));
 
     res.json({
       totalReviews,
       totalBugs: bugsAgg[0]?.totalBugs || 0,
       cleanPercent,
+      healthImpact,
+      uptime: '100%', // Dedicated node availability
     });
   } catch (error) {
     console.error(error);

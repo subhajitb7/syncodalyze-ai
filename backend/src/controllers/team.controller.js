@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import User from '../models/User.model.js';
 import Team from '../models/Team.model.js';
 import Notification from '../models/Notification.model.js';
@@ -61,7 +62,7 @@ export const getTeamById = async (req, res) => {
 // @route   POST /api/teams/:id/invite
 export const inviteMember = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { identifier } = req.body;
     const team = await Team.findById(req.params.id);
 
     if (!team) return res.status(404).json({ message: 'Team not found' });
@@ -72,8 +73,16 @@ export const inviteMember = async (req, res) => {
       return res.status(403).json({ message: 'Only owners and admins can invite members' });
     }
 
-    const userToInvite = await User.findOne({ email });
-    if (!userToInvite) return res.status(404).json({ message: 'User not found with that email' });
+    const isNodeId = identifier.startsWith('SYN-');
+    let userToInvite;
+    
+    if (isNodeId) {
+      userToInvite = await User.findOne({ nodeId: identifier });
+    } else {
+      userToInvite = await User.findOne({ email: identifier });
+    }
+
+    if (!userToInvite) return res.status(404).json({ message: `User not found with that ${isNodeId ? 'Node Hash' : 'email'}` });
 
     const alreadyMember = team.members.some((m) => m.user.toString() === userToInvite._id.toString());
     if (alreadyMember) return res.status(400).json({ message: 'User is already a member' });

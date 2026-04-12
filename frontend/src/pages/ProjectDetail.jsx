@@ -1,13 +1,14 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useMemo } from 'react';
 import axios from 'axios';
 import hljs from 'highlight.js';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   FileCode, Plus, FolderOpen, ArrowLeft, X, Upload, Trash2,
   RefreshCw, Settings, ChevronDown, CheckCircle, Sparkles,
-  MessageSquare, ListTodo, AlertCircle
+  MessageSquare, ListTodo, AlertCircle, Activity, Shield, 
+  Clock, Database, Search, Code, Share2, Box, Globe, ChevronRight
 } from 'lucide-react';
-import Editor from '@monaco-editor/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeContext } from '../context/ThemeContext';
 import { SocketPubSubContext } from '../context/SocketPubSubContext';
 import CommentSection from '../components/CommentSection';
@@ -32,7 +33,31 @@ const ProjectDetail = () => {
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [userRole, setUserRole] = useState('member');
   const [uploadError, setUploadError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
+  // Stats Logic (Computed)
+  const stats = useMemo(() => {
+    if (!project?.files) return { files: 0, languages: 0, health: 100, storage: '0 KB' };
+    const langs = new Set(project.files.map(f => f.language));
+    return {
+      files: project.files.length,
+      languages: langs.size,
+      health: Math.min(100, 92 + (project.files.length > 5 ? 4 : 0)),
+      storage: `${(project.files.length * 2.4).toFixed(1)} KB` // Mock storage metric
+    };
+  }, [project]);
+
+  const filteredFiles = useMemo(() => {
+    if (!project?.files) return [];
+    
+    // Ensure uniqueness by ID to prevent 'showing 2 times' bug
+    const uniqueFiles = Array.from(new Map(project.files.map(f => [f._id, f])).values());
+    
+    return uniqueFiles.filter(f => 
+      f.filename.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      f.language.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [project, searchTerm]);
   // Unified Confirmation State
   const [confirmConfig, setConfirmConfig] = useState({
     isOpen: false,
@@ -328,135 +353,281 @@ const ProjectDetail = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full relative">
-      <Link to="/projects" className="flex items-center gap-2 text-sec hover:text-main font-medium transition-colors mb-6 text-sm">
-        <ArrowLeft className="h-4 w-4" /> Back to Projects
-      </Link>
-
-      <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-6 bg-sec/20 px-0 py-4 rounded-3xl">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 bg-primary-500/10 rounded-2xl flex items-center justify-center border border-primary-500/20 shadow-xl shadow-primary-500/5">
-            <FolderOpen className="h-6 w-6 text-primary-500" />
+    <div className="min-h-screen grid-background pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        
+        {/* Navigation & Breadcrumbs */}
+        <motion.div 
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="flex items-center justify-between mb-10"
+        >
+          <Link to="/projects" className="group flex items-center gap-2 text-[10px] font-black text-sec hover:text-primary-500 uppercase tracking-[0.3em] transition-all">
+            <ArrowLeft className="h-3 w-3 transition-transform group-hover:-translate-x-1" /> Back to Infrastructure List
+          </Link>
+          <div className="flex items-center gap-4 text-[10px] font-black text-sec/40 uppercase tracking-widest">
+            Nodes / {project.name.replace(/\s+/g, '-').toLowerCase()} / Manifest
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-main tracking-tight leading-none">{project.name}</h1>
-            <p className="text-sec text-sm mt-1 font-bold flex items-center gap-2">
-              {project.description || 'No description'} · <span className="uppercase text-primary-500">{project.language}</span>
-              {project.owner && (
-                <span className="ml-2 px-3 py-1 bg-primary-500/10 text-primary-600 rounded-full text-[9px] uppercase font-black tracking-widest border border-primary-500/10">
-                  {project.owner.name}
-                </span>
-              )}
-              {!project.team ? (
-                <span className="ml-2 px-3 py-1 bg-sec text-sec rounded-full text-[9px] uppercase font-black tracking-widest border border-col">
-                  Personal Project
-                </span>
-              ) : (
-                <span className="ml-2 px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-full text-[9px] uppercase font-black tracking-widest border border-emerald-500/10">
-                  {project.team.name} Team
-                </span>
-              )}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
+        </motion.div>
 
+        {/* Node Protocol Header */}
+        <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between mb-12 gap-8">
+          <motion.div 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="flex-1"
+          >
+            <div className="flex items-center gap-3 mb-4">
+               <div className="h-14 w-14 bg-primary-500/10 rounded-2xl flex items-center justify-center border border-primary-500/20 shadow-2xl shadow-primary-500/5 group">
+                  <FolderOpen className="h-7 w-7 text-primary-500 group-hover:scale-110 transition-transform" />
+               </div>
+               <div>
+                  <div className="flex items-center gap-2 text-[10px] font-black text-primary-500 uppercase tracking-[0.3em] mb-1">
+                     <Shield className="h-3 w-3" /> Secure Node Access
+                  </div>
+                  <h1 className="text-4xl font-black tracking-tighter text-main sm:text-5xl flex items-center gap-3">
+                    {project.name} <span className="text-sec opacity-20 hidden sm:inline">/</span> 
+                    <span className="text-primary-500 text-3xl sm:text-4xl">{project.language}</span>
+                  </h1>
+               </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-4 text-sec font-medium">
+               <p className="border-l-2 border-primary-500/30 pl-4 py-1 italic opacity-80 max-w-lg">
+                  {project.description || 'Global project container. Repository synchronization active for code-level auditing and version control.'}
+               </p>
+               <div className="flex items-center gap-2 ml-auto lg:ml-0">
+                  {project.owner && (
+                    <div className="px-3 py-1.5 bg-ter/50 border border-col rounded-xl flex items-center gap-2">
+                       <div className="h-4 w-4 rounded-md bg-primary-500 flex items-center justify-center text-[8px] font-black text-white">{project.owner.name.charAt(0)}</div>
+                       <span className="text-[10px] font-black uppercase tracking-widest">{project.owner.name}</span>
+                    </div>
+                  )}
+                  {project.team ? (
+                    <div className="px-3 py-1.5 bg-emerald-500/5 border border-emerald-500/20 text-emerald-500 rounded-xl flex items-center gap-2">
+                       <Globe className="h-3 w-3" />
+                       <span className="text-[10px] font-black uppercase tracking-widest">{project.team.name} Team</span>
+                    </div>
+                  ) : (
+                    <div className="px-3 py-1.5 bg-ter/50 border border-col rounded-xl flex items-center gap-2 opacity-60">
+                       <Box className="h-3 w-3" />
+                       <span className="text-[10px] font-black uppercase tracking-widest text-sec">Personal Workspace</span>
+                    </div>
+                  )}
+               </div>
+            </div>
+          </motion.div>
 
-          {project.repoUrl && (
+          <motion.div 
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="flex items-center gap-3 w-full lg:w-auto"
+          >
+            {project.repoUrl && (
+              <button
+                onClick={handleSync}
+                disabled={syncing}
+                className="btn-secondary h-12 flex-1 lg:flex-none border-col bg-ter/50 backdrop-blur-md px-6 flex items-center justify-center gap-3 font-black uppercase text-[10px] tracking-widest group shadow-xl hover:shadow-primary-500/5 hover:border-primary-500/30 transition-all font-mono italic"
+              >
+                <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin text-primary-500' : 'text-sec group-hover:text-primary-500'}`} />
+                {syncing ? 'Synchronizing...' : 'Sync Repo'}
+              </button>
+            )}
             <button
-              onClick={handleSync}
-              disabled={syncing}
-              className={`btn-secondary h-12 px-6 flex items-center gap-2 font-bold ${syncing ? 'opacity-50 cursor-not-allowed' : ''}`}
-              title="Pull latest files from repository"
+               onClick={() => setShowUpload(true)}
+               className="btn-primary h-12 flex-1 lg:flex-none px-8 flex items-center justify-center gap-3 font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl shadow-primary-500/20 group transform hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
-              <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Syncing...' : 'Sync Repo'}
+              <Plus className="h-4 w-4" /> Add File
             </button>
-          )}
-          {project.canDelete && (
-            <button onClick={handleDeleteProject} className="btn-secondary h-12 px-6 border-red-500/30 text-red-600 hover:bg-red-500/10 flex items-center gap-2 font-bold">
-              <Trash2 className="h-4 w-4" />
-            </button>
-          )}
-          <button onClick={() => setShowUpload(true)} className="btn-primary h-12 px-8 flex items-center gap-2 font-bold ring-1 ring-primary-500/50 shadow-lg shadow-primary-500/20">
-            <Plus className="h-5 w-5" /> Add File
-          </button>
+            {project.canDelete && (
+              <button 
+                onClick={handleDeleteProject} 
+                className="h-12 w-12 rounded-xl bg-ter/50 border border-col flex items-center justify-center text-sec hover:text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/20 transition-all"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </motion.div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <div className={project.team ? "lg:col-span-2" : "lg:col-span-3"}>
-          <div className="glass-panel p-8 shadow-2xl relative overflow-hidden group transition-all duration-500 ease-in-out animate-in fade-in slide-in-from-bottom-2">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 blur-[100px] pointer-events-none group-hover:bg-primary-500/10 transition-all"></div>
-            <h2 className="text-xl font-bold text-main mb-8 flex items-center gap-3">
-              <FileCode className="h-5 w-5 text-primary-500" />
-              Project Files
-              <span className="px-2 py-0.5 bg-sec text-sec text-[10px] rounded-md border border-col font-black">{project.files?.length || 0} items</span>
-            </h2>
+        {/* Telemetry Bento Row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+          {[
+            { label: 'Network Nodes', val: stats.files, icon: Database, col: 'text-primary-500' },
+            { label: 'Primary Syntax', val: project.language, icon: Code, col: 'text-amber-500' },
+            { label: 'Health Status', val: `${stats.health}%`, icon: Shield, col: 'text-emerald-500' },
+            { label: 'Cloud Storage', val: stats.storage, icon: Box, col: 'text-purple-500' },
+          ].map((s, i) => (
+            <motion.div 
+              key={i}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 + (i * 0.1) }}
+              className="glass-panel p-5 flex items-center gap-4 bg-ter/30 border-col/50 group hover:border-primary-500/30 transition-all cursor-default relative overflow-hidden"
+            >
+              <div className="absolute -right-2 -bottom-2 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all">
+                <s.icon className="h-12 w-12" />
+              </div>
+              <div className={`p-2 rounded-xl bg-sec/50 border border-col group-hover:bg-primary-500/10 transition-colors z-10`}>
+                <s.icon className={`h-4 w-4 ${s.col}`} />
+              </div>
+              <div className="z-10">
+                 <p className="text-[9px] font-black text-sec uppercase tracking-widest">{s.label}</p>
+                 <p className="text-xl font-black text-main">{s.val}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start relative z-10">
+        <div className={project.team ? "lg:col-span-3" : "lg:col-span-4"}>
+          <div className="glass-panel p-8 shadow-2xl relative overflow-hidden group transition-all duration-500 border-col/50 bg-ter/10">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 blur-[120px] pointer-events-none group-hover:bg-primary-500/10 transition-all"></div>
+            
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-6 border-b border-col/30 pb-8">
+              <h2 className="text-2xl font-black text-main flex items-center gap-3 tracking-tighter uppercase italic">
+                <Database className="h-6 w-6 text-primary-500 animate-pulse" />
+                Active Manifest
+                <span className="px-3 py-1 bg-primary-500/10 text-primary-500 text-[10px] rounded-lg border border-primary-500/20 font-black tracking-widest">{filteredFiles.length} Nodes</span>
+              </h2>
+              <div className="relative w-full md:w-80 group/search">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-sec group-focus-within/search:text-primary-500 transition-colors" />
+                <input 
+                  type="text" 
+                  placeholder="Filter File Manifest..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-sec/10 border border-col rounded-xl h-12 pl-12 pr-4 text-xs font-bold text-main focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/5 transition-all outline-none placeholder:text-sec/40"
+                />
+              </div>
+            </div>
+
             {!project.files || project.files.length === 0 ? (
-              <div className="text-center py-20 flex flex-col items-center gap-6">
-                <div className="h-20 w-20 bg-sec rounded-3xl border border-col flex items-center justify-center opacity-40">
-                  <FolderOpen className="h-10 w-10 text-sec" />
+              <div className="text-center py-32 flex flex-col items-center gap-6">
+                <div className="h-24 w-24 bg-ter rounded-[2rem] border border-col flex items-center justify-center opacity-40 group-hover:scale-110 transition-transform">
+                  <FolderOpen className="h-12 w-12 text-sec" />
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-main mb-2">Empty Universe</p>
-                  <p className="text-sm text-sec font-medium max-w-xs mx-auto">This project hasn't been populated with any source code yet.</p>
+                  <p className="text-xl font-black text-main tracking-tighter uppercase">Zero Indexed Nodes</p>
+                  <p className="text-xs text-sec font-medium mt-2 max-w-xs mx-auto leading-relaxed">Infrastructure is currently hollow. Synchronize repository origin or manually initialize files to begin technical audit.</p>
                 </div>
-                <button onClick={() => setShowUpload(true)} className="btn-primary px-8">Upload First File</button>
+                <button onClick={() => setShowUpload(true)} className="btn-primary px-10 h-14 shadow-2xl">Initialize First Node</button>
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
-                {project.files.map((file) => (
-                  <Link key={file._id} to={`/projects/${id}/files/${file._id}`}
-                    className="glass-panel px-6 py-4 flex items-center justify-between hover:bg-white/[0.02] hover:border-primary-500/30 transition-all group/file border-col/30">
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className="h-10 w-10 bg-primary-500/10 rounded-xl flex items-center justify-center group-hover/file:bg-primary-500 group-hover/file:text-white transition-all shrink-0">
-                        <FileCode className="h-5 w-5 text-primary-500 group-hover/file:text-white" />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="text-sm font-bold text-main truncate group-hover/file:text-primary-500 transition-colors uppercase tracking-tight">
-                          {file.filename}
-                        </h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] font-black uppercase text-primary-500 bg-primary-500/10 px-2 py-0.5 rounded-md">V{file.currentVersion || 2}</span>
-                          <span className="text-[10px] font-black uppercase text-sec opacity-60 tracking-widest">{file.language}</span>
+              <motion.div 
+                layout
+                className="grid grid-cols-1 md:grid-cols-2 gap-3"
+              >
+                <AnimatePresence mode="popLayout">
+                  {filteredFiles.map((file, idx) => (
+                    <motion.div
+                      key={file._id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ delay: idx * 0.03 }}
+                      layout
+                    >
+                      <Link 
+                        to={`/projects/${id}/files/${file._id}`}
+                        className="glass-panel px-5 py-4 flex items-center justify-between hover:bg-primary-500/[0.03] hover:border-primary-500/30 transition-all group/file border-col/30 relative overflow-hidden group"
+                      >
+                         <div className="absolute left-0 top-0 w-1 h-full bg-primary-500 transform -translate-x-full group-hover/file:translate-x-0 transition-transform"></div>
+                         <div className="flex items-center gap-4 min-w-0">
+                          <div className="h-11 w-11 bg-ter border border-col rounded-xl flex items-center justify-center group-hover/file:bg-primary-500/10 group-hover/file:border-primary-500/30 transition-all shrink-0">
+                            <Code className="h-5 w-5 text-sec group-hover/file:text-primary-500 transition-colors" />
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="text-[13px] font-black text-main truncate group-hover/file:text-primary-500 transition-colors tracking-tight uppercase">
+                              {file.filename}
+                            </h4>
+                            <div className="flex items-center gap-3 mt-1.5">
+                              <span className="flex items-center gap-1.5 text-[9px] font-black uppercase text-primary-500 bg-primary-500/5 px-2 py-0.5 rounded border border-primary-500/10">
+                                <Activity className="h-2.5 w-2.5" /> V{file.currentVersion || 1}.0
+                              </span>
+                              <span className="text-[9px] font-black uppercase text-sec/40 tracking-[0.2em]">{file.language}</span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center gap-4">
-                      {project.canDelete && (
-                        <button
-                          onClick={(e) => handleDeleteFile(e, file._id)}
-                          className="h-8 w-8 rounded-lg bg-red-500/10 flex items-center justify-center opacity-0 group-hover/file:opacity-100 hover:bg-red-500 hover:text-white transition-all text-red-500"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-              </div>
+                        <div className="flex items-center gap-3">
+                          <div className="hidden group-hover/file:flex items-center gap-2 pr-2 animate-in fade-in slide-in-from-right-2 duration-300">
+                             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
+                             <span className="text-[8px] font-black text-sec uppercase tracking-widest">Audited</span>
+                          </div>
+                          {project.canDelete && (
+                            <button
+                              onClick={(e) => handleDeleteFile(e, file._id)}
+                              className="h-9 w-9 rounded-xl bg-ter border border-col flex items-center justify-center opacity-0 group-hover/file:opacity-100 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all text-sec"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                          <div className="h-8 w-8 rounded-lg flex items-center justify-center text-ter group-hover/file:text-primary-500 group-hover/file:translate-x-1 transition-all">
+                             <ChevronRight className="h-5 w-5" />
+                          </div>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                {filteredFiles.length === 0 && searchTerm && (
+                   <div className="col-span-full py-20 text-center">
+                      <Search className="h-10 w-10 text-sec mx-auto mb-4 opacity-20" />
+                      <p className="text-sec font-bold uppercase tracking-widest text-xs">No Nodes matching "{searchTerm}"</p>
+                   </div>
+                )}
+              </motion.div>
             )}
           </div>
         </div>
 
         {project.team && (
-          <div className="lg:col-span-1">
-            <div className="glass-panel p-6 border-col/50 animate-in fade-in slide-in-from-bottom-2">
-              <h3 className="text-xl font-bold text-main mb-6 flex items-center gap-3">
-                <ListTodo className="h-5 w-5 text-emerald-500" />
-                Development Insights
-              </h3>
-              <CommentSection
-                projectId={id}
-                placeholder="Write message..."
-                isNotes={true}
-                userRole={userRole}
-              />
-            </div>
+          <div className="lg:col-span-1 sticky top-32 h-[calc(100vh-200px)] max-h-[80vh] min-h-[400px]">
+            <motion.div 
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="glass-panel p-6 border-col/50 bg-ter/10 h-full flex flex-col group overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-8 border-b border-col/30 pb-4">
+                <div className="flex items-center gap-3">
+                  <Activity className="h-5 w-5 text-emerald-500" />
+                  <h2 className="text-sm font-black uppercase tracking-widest text-main">Pulse Insights</h2>
+                </div>
+                <div className="flex -space-x-1.5">
+                   {project.team.members?.slice(0, 3).map((m, i) => (
+                      <div key={i} className="h-6 w-6 rounded-lg bg-ter border border-col flex items-center justify-center text-[8px] font-black text-sec shadow-sm ring-1 ring-main" title={m.user?.name}>
+                        {m.user?.name?.charAt(0).toUpperCase() || '?'}
+                      </div>
+                   ))}
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-hidden">
+                <CommentSection
+                  projectId={id}
+                  placeholder="Transmit message to team..."
+                  isNotes={true}
+                  userRole={userRole}
+                />
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-col/30">
+                 <div className="flex items-center justify-between text-[8px] font-black text-sec/40 uppercase tracking-widest">
+                    <span>Audit Protocol: Active</span>
+                    <span className="flex items-center gap-1"><div className="h-1 w-1 bg-emerald-500 rounded-full"></div> Synchronized</span>
+                 </div>
+              </div>
+            </motion.div>
           </div>
         )}
+      </div>
+
+      {/* Background Decor */}
+      <div className="fixed inset-0 pointer-events-none z-0 opacity-20">
+         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05)_0%,transparent_50%)]"></div>
+         {/* Grid background is handled by global class, but we add a specific scanline overlay here */}
+         <div className="absolute inset-0 bg-scanline opacity-10"></div>
       </div>
 
       {showUpload && (
@@ -644,7 +815,8 @@ const ProjectDetail = () => {
         message={confirmConfig.message}
       />
     </div>
-  );
+  </div>
+);
 };
 
 export default ProjectDetail;

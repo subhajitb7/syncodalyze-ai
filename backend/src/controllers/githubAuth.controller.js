@@ -1,6 +1,9 @@
+import crypto from 'crypto';
 import axios from 'axios';
 import User from '../models/User.model.js';
 import generateToken from '../utils/generateToken.js';
+
+const generateNodeId = () => `SYN-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 
 // @desc    Redirect to GitHub OAuth
 // @route   GET /api/auth/github
@@ -91,6 +94,7 @@ export const gitHubCallback = async (req, res) => {
         githubId,
         githubAccessToken: accessToken,
         isVerified: true,
+        nodeId: generateNodeId(),
       });
     }
 

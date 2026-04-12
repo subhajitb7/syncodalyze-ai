@@ -1,9 +1,10 @@
 import { useContext, useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Send, Trash2, User, CheckSquare, Square, Pencil, Check, X, ListTodo, Mic, MicOff } from 'lucide-react';
+import { Send, Trash2, User, CheckSquare, Square, Pencil, Check, X, ListTodo, Mic, MicOff, Activity } from 'lucide-react';
 import useSpeechToText from '../hooks/useSpeechToText';
 import { AuthContext } from '../context/AuthContext';
 import { SocketPubSubContext } from '../context/SocketPubSubContext';
+import { motion } from 'framer-motion';
 import ConfirmModal from './ConfirmModal';
 
 const CommentSection = ({
@@ -130,138 +131,156 @@ const CommentSection = ({
   }, [comments, loading]);
 
   return (
-    <div>
-      {/* List - Scrollable Viewport (Sized for ~4 comments) */}
+    <div className="flex flex-col h-full min-h-0">
+      {/* List - Tactical Comms Log */}
       <div
         ref={scrollRef}
-        className="space-y-4 mb-4 pb-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar scroll-smooth"
+        className="flex-1 min-h-0 space-y-2 mb-6 overflow-y-auto pr-3 custom-scrollbar scroll-smooth relative"
       >
+        {/* Signal Path Decoration */}
+        <div className="absolute left-[11px] top-0 bottom-0 w-[1px] bg-gradient-to-b from-emerald-500/50 via-col/30 to-transparent pointer-events-none"></div>
+
         {loading ? (
-          <p className="text-sec text-sm italic py-4">Loading insights...</p>
+          <div className="flex items-center gap-3 py-6 px-4">
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+            <p className="text-[10px] font-black text-sec uppercase tracking-[0.2em] italic">Decrypting incoming packets...</p>
+          </div>
         ) : comments.length === 0 ? (
-          <p className="text-sec text-sm italic opacity-60 py-4">
-            {emptyMessage || (isNotes ? "No notes found. Capture your project flow." : "No discussions yet.")}
-          </p>
+          <div className="flex flex-col items-center justify-center py-20 opacity-30">
+            <Activity className="h-8 w-8 text-sec mb-4" />
+            <p className="text-[10px] font-black text-sec uppercase tracking-widest text-center leading-relaxed">
+              {emptyMessage || (isNotes ? "Primary Archive Empty\nAwait manual transmission" : "Secure Channel Open\nNo traffic detected")}
+            </p>
+          </div>
         ) : (
-          comments.map((comment) => (
-            <div
-              key={comment._id}
-              className={`flex gap-3 p-4 glass-panel transition-all group border-col/30 ${isNotes
-                ? 'bg-sec/30 hover:bg-sec/50'
-                : 'hover:bg-sec/20 shadow-sm'
-                }`}
-            >
-
-              <div className="flex-1 min-w-0">
-                {/* Header for Context - Sequential Grouping (Rock Solid Consistency) */}
-                <div className="flex items-center gap-2 mb-1 h-4 overflow-hidden">
-                  <span className={`font-black text-[10px] uppercase tracking-tighter truncate max-w-[120px] ${contextType === 'teams' ? 'text-primary-500' : 'text-emerald-500'
-                    }`}>
-                    {comment.user?.name || 'User'}
-                  </span>
-
-                  <span className="text-[9px] text-sec font-bold opacity-30 uppercase tracking-tighter shrink-0 whitespace-nowrap flex items-center gap-1">
-                    <span className="opacity-50">·</span>
-                    {new Date(comment.createdAt).toLocaleDateString()}
-                    <span className="opacity-50">/</span>
-                    {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
+          <div className="relative">
+            {comments.map((comment, idx) => (
+              <motion.div
+                key={comment._id}
+                initial={{ x: -10, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: idx * 0.05 }}
+                className={`group relative pl-8 py-1.5 transition-all hover:bg-emerald-500/5 rounded-r-xl border-l-2 border-transparent hover:border-emerald-500/20`}
+              >
+                {/* Visual Anchor Dot */}
+                <div className="absolute left-[7.5px] top-5 h-2 w-2 rounded-full bg-ter border border-col group-hover:border-emerald-500/50 group-hover:bg-emerald-500/20 transition-all z-10">
+                   <div className="h-full w-full rounded-full bg-emerald-500 scale-0 group-hover:scale-50 transition-transform"></div>
                 </div>
 
-                {/* Content */}
-                {editingId === comment._id ? (
-                  <div className="flex flex-col gap-2 mt-4">
-                    <textarea
-                      value={editText}
-                      onChange={(e) => setEditText(e.target.value)}
-                      className="glass-input text-sm w-full py-2 min-h-[60px]"
-                      autoFocus
-                    />
-                    <div className="flex gap-2 justify-end">
-                      <button onClick={() => setEditingId(null)} className="p-1 px-3 text-xs font-bold text-sec hover:text-main">Cancel</button>
-                      <button onClick={() => handleUpdate(comment._id)} className="btn-primary py-1 px-4 text-xs">Save</button>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-3">
+                      <span className="text-[9px] font-mono text-emerald-500/60 font-medium">
+                        [{new Date(comment.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }).replace(/\//g, '.')} | {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}]
+                      </span>
+                      <span className="font-black text-[10px] uppercase tracking-widest text-main group-hover:text-emerald-500 transition-colors">
+                        {comment.user?.name || 'Unknown_Node'}
+                      </span>
                     </div>
-                  </div>
-                ) : (
-                  <p className={`text-sm leading-relaxed mt-2 break-words break-all whitespace-pre-wrap ${isNotes ? 'text-main font-medium' : 'text-sec font-medium'}`}>
-                    {comment.text}
-                  </p>
-                )}
-              </div>
 
-              {/* Actions */}
-              {user && editingId !== comment._id && (
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0 self-start">
-                  {comment.user?._id === user._id && (
-                    <button
-                      onClick={() => startEditing(comment)}
-                      className="p-1.5 text-sec hover:text-primary-500 hover:bg-primary-500/10 rounded-lg transition-all"
-                      title="Edit Comment"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                  {(comment.user?._id === user._id || userRole === 'admin' || userRole === 'owner') && (
-                    <button
-                      onClick={() => handleDeleteTrigger(comment._id)}
-                      className="p-1.5 text-sec hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
-                      title="Delete Comment"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    {/* Actions - Subtle Hover Trigger */}
+                    {user && editingId !== comment._id && (
+                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                        {comment.user?._id === user._id && (
+                          <button
+                            onClick={() => startEditing(comment)}
+                            className="p-1 text-sec hover:text-primary-500 transition-all"
+                            title="Edit Transaction"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                        )}
+                        {(comment.user?._id === user._id || userRole === 'admin' || userRole === 'owner') && (
+                          <button
+                            onClick={() => handleDeleteTrigger(comment._id)}
+                            className="p-1 text-sec hover:text-red-500 transition-all"
+                            title="Purge Packet"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  {editingId === comment._id ? (
+                    <div className="flex flex-col gap-2 mt-2 bg-ter/50 p-2 rounded-lg border border-primary-500/20">
+                      <textarea
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        className="bg-transparent border-none outline-none text-xs text-main font-medium resize-none min-h-[60px]"
+                        autoFocus
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <button onClick={() => setEditingId(null)} className="text-[9px] font-black uppercase text-sec hover:text-main">Cancel</button>
+                        <button onClick={() => handleUpdate(comment._id)} className="bg-primary-500 text-white px-3 py-1 rounded text-[9px] font-black uppercase shadow-lg shadow-primary-500/20">Sync</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                       <p className="text-[12px] leading-relaxed text-sec font-medium group-hover:text-main transition-colors whitespace-pre-wrap">
+                        {comment.text}
+                      </p>
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-          ))
+              </motion.div>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Input */}
-      <form onSubmit={handleSubmit} className="relative group mt-2">
-        <div className="glass-panel p-2 flex items-end gap-2 border-col/40 group-focus-within:bg-sec/60 transition-all shadow-lg">
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={placeholder || "Write message..."}
-            className="flex-1 bg-transparent border-none outline-none text-sm font-medium resize-none px-3 py-2.5 min-h-[44px] max-h-40 text-main custom-scrollbar"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit(e);
-              }
-            }}
-          />
-          <div className="flex items-center gap-2 pb-1 pr-1">
-            <button
-              type="button"
-              onClick={isListening ? stopListening : startListening}
-              className={`flex items-center justify-center h-9 w-9 rounded-full transition-all ${isListening
-                ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/20'
-                : 'text-sec hover:text-main hover:bg-ter/50'
-                }`}
-              title={isListening ? "Stop Listening" : "Voice Message"}
-            >
-              {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-            </button>
+      {/* Input - Secure Transmitter */}
+      <form onSubmit={handleSubmit} className="relative group mt-auto px-1">
+        <div className="glass-panel p-1.5 flex flex-col gap-1 border-col/30 bg-ter/40 group-focus-within:border-emerald-500/30 group-focus-within:bg-ter/60 transition-all shadow-xl rounded-2xl overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-1 opacity-40 group-focus-within:opacity-100 transition-opacity">
+             <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse"></div>
+             <span className="text-[8px] font-black uppercase tracking-[0.3em] text-emerald-500">Transmitter Enabled</span>
+          </div>
+          <div className="flex items-end gap-2">
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder={placeholder || "ENCRYPTED TRANSMISSION..."}
+              className="flex-1 bg-transparent border-none outline-none text-xs font-semibold resize-none px-3 py-2 min-h-[44px] max-h-32 text-main custom-scrollbar placeholder:text-sec/30"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+            />
+            <div className="flex items-center gap-2 pb-1 pr-1">
+              <button
+                type="button"
+                onClick={isListening ? stopListening : startListening}
+                className={`flex items-center justify-center h-9 w-9 rounded-xl transition-all ${isListening
+                  ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/20'
+                  : 'text-sec hover:text-emerald-500 hover:bg-emerald-500/10'
+                  }`}
+              >
+                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </button>
 
-            <button
-              type="submit"
-              disabled={!text.trim()}
-              className="h-9 w-9 flex items-center justify-center rounded-full bg-primary-600 hover:bg-primary-500 text-white shadow-lg shadow-primary-500/10 disabled:opacity-30 active:scale-95 transition-all"
-            >
-              <Send className="h-4 w-4" />
-            </button>
+              <button
+                type="submit"
+                disabled={!text.trim()}
+                className="h-9 w-9 flex items-center justify-center rounded-xl bg-primary-600 hover:bg-primary-500 text-white shadow-xl shadow-primary-500/20 disabled:opacity-20 transition-all group/send"
+              >
+                <Send className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              </button>
+            </div>
           </div>
         </div>
       </form>
-      {/* Confirmation Modal */}
+
       <ConfirmModal
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleConfirmDelete}
-        title="Delete Comment?"
-        message="Are you sure you want to remove this project note or discussion point?"
+        title="Purge Communication?"
+        message="This will permanently delete the selected packet from the tactical record."
       />
     </div>
   );

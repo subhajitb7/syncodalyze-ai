@@ -136,6 +136,15 @@ export const deleteReview = async (req, res) => {
 
     await Comment.deleteMany({ review: review._id });
     await Review.findByIdAndDelete(req.params.id);
+    
+    // Create Audit Log
+    await AuditLog.create({
+      action: 'PURGE_ANALYSIS',
+      actor: req.user._id,
+      details: `Purged analysis node: ${review.title} (Owner: ${review.user?.name || 'Unknown'})`,
+      metadata: { reviewId: review._id, reviewTitle: review.title },
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
 
     res.json({ message: 'Review and comments deleted' });
   } catch (error) {

@@ -1,8 +1,12 @@
+import crypto from 'crypto';
 import User from '../models/User.model.js';
 import generateToken from '../utils/generateToken.js';
 import { sendOtpEmail } from '../utils/sendEmail.js';
+import AuditLog from '../models/AuditLog.model.js';
 
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+const generateNodeId = () => `SYN-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 
 const validatePassword = (password) => {
   // At least 6 characters, at least one uppercase, one lowercase, one number and one special character
@@ -99,6 +103,7 @@ export const registerUser = async (req, res) => {
       isVerified: false,
       otp,
       otpExpiry: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      nodeId: generateNodeId(),
     });
 
     await sendOtpEmail(email, otp);
@@ -160,6 +165,7 @@ export const verifyOtp = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      nodeId: user.nodeId,
       isMaster: user.email === process.env.MASTER_ADMIN_EMAIL,
       mustUpdatePassword: user.mustUpdatePassword
     });
@@ -229,6 +235,7 @@ export const getUserProfile = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      nodeId: user.nodeId,
       isMaster: user.email === process.env.MASTER_ADMIN_EMAIL,
     });
   } else {
@@ -391,6 +398,7 @@ export const verify2fa = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      nodeId: user.nodeId,
       isMaster: user.email === process.env.MASTER_ADMIN_EMAIL,
       mustUpdatePassword: user.mustUpdatePassword
     });
@@ -400,4 +408,48 @@ export const verify2fa = async (req, res) => {
   }
 };
 
+// @desc    Delete user profile
+// @route   DELETE /api/auth/profile
+// @access  Private
+export const deleteUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
+    // Safeguard: Master Admin cannot delete themselves
+    if (user.email === process.env.MASTER_ADMIN_EMAIL) {
+      return res.status(403).json({ 
+        message: 'Master Admin identity cannot be terminated directly. Transfer sovereignty or downgrade before deletion.' 
+      });
+    }
+
+    // Capture metadata before deletion
+    const userId = user._id;
+    const userName = user.name;
+    const userEmail = user.email;
+
+    await User.findByIdAndDelete(userId);
+
+    // Create Audit Log
+    await AuditLog.create({
+      action: 'ACCOUNT_TERMINATED',
+      actor: userId,
+      details: `Identity Node [${userName} (${userEmail})] terminated by self. All access credentials revoked.`,
+      ipAddress: req.ip
+    });
+
+    // Clear session
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie('jwt', '', {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      expires: new Date(0),
+    });
+
+    res.status(200).json({ message: 'Identity Node successfully terminated. Redirecting to landing...' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error during account termination' });
+  }
+};

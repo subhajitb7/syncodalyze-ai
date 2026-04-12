@@ -2,7 +2,7 @@ import express from 'express';
 import {
   authUser, registerUser, logoutUser, getUserProfile, updateUserProfile,
   verifyOtp, resendOtp, forgotPassword, resetPassword,
-  verify2fa, upgradePassword
+  verify2fa, upgradePassword, deleteUserProfile
 } from '../controllers/auth.controller.js';
 import { gitHubRedirect, gitHubCallback } from '../controllers/githubAuth.controller.js';
 import { protect } from '../middleware/authMiddleware.js';
@@ -23,5 +23,6 @@ router.post('/verify-2fa', verify2fa);
 router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, updateUserProfile);
 router.put('/profile/upgrade-password', protect, upgradePassword);
+router.delete('/profile', protect, deleteUserProfile);
 
 export default router;
