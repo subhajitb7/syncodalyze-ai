@@ -91,7 +91,16 @@ const ResetPassword = () => {
   if (success) {
     return (
       <div className="flex-1 flex items-center justify-center p-6 relative">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+        {/* Sovereign V2 Background Mesh */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-600/10 rounded-full blur-[120px] animate-pulse"></div>
+          <div className="absolute top-[20%] right-[-5%] w-[35%] h-[35%] bg-purple-600/10 rounded-full blur-[100px] animate-pulse [animation-delay:2s]"></div>
+          <div className="absolute bottom-[10%] left-[20%] w-[40%] h-[40%] bg-emerald-600/5 rounded-full blur-[150px]"></div>
+        </div>
+        
+        {/* Grid Lines Overlay */}
+        <div className="absolute inset-0 grid-background opacity-10 pointer-events-none"></div>
+        
         <div className="glass-panel w-full max-w-md p-8 z-10 text-center">
           <div className="h-16 w-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="h-8 w-8 text-emerald-400" />
@@ -106,7 +115,16 @@ const ResetPassword = () => {
 
   return (
     <div className="flex-1 flex items-center justify-center p-6 relative">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+      {/* Sovereign V2 Background Mesh */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-600/10 rounded-full blur-[120px] animate-pulse"></div>
+        <div className="absolute top-[20%] right-[-5%] w-[35%] h-[35%] bg-purple-600/10 rounded-full blur-[100px] animate-pulse [animation-delay:2s]"></div>
+        <div className="absolute bottom-[10%] left-[20%] w-[40%] h-[40%] bg-emerald-600/5 rounded-full blur-[150px]"></div>
+      </div>
+      
+      {/* Grid Lines Overlay */}
+      <div className="absolute inset-0 grid-background opacity-10 pointer-events-none"></div>
+      
       <div className="glass-panel w-full max-w-md p-8 z-10 shadow-2xl">
         <div className="h-14 w-14 bg-primary-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
           <Lock className="h-7 w-7 text-primary-400" />

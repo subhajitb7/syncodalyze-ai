@@ -27,20 +27,19 @@ const ForgotPassword = () => {
 
   return (
     <div className="flex-1 min-h-[calc(100vh-64px)] flex bg-main overflow-hidden relative">
-      {/* Background Decor - Grid Lines */}
-      <div className="absolute inset-0 grid-background opacity-20 pointer-events-none"></div>
+      {/* Sovereign V2 Background Mesh */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-600/10 rounded-full blur-[120px] animate-pulse"></div>
+        <div className="absolute top-[20%] right-[-5%] w-[35%] h-[35%] bg-purple-600/10 rounded-full blur-[100px] animate-pulse [animation-delay:2s]"></div>
+        <div className="absolute bottom-[10%] left-[20%] w-[40%] h-[40%] bg-emerald-600/5 rounded-full blur-[150px]"></div>
+      </div>
       
-      {/* Left Column: Brand Visualization */}
-      <div className="hidden lg:flex flex-1 relative flex-col items-center justify-center p-20 bg-ter/10 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-           <motion.div 
-             animate={{ scale: [1, 1.1, 1], rotate: [0, -5, 0] }}
-             transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary-600/5 rounded-full blur-[150px]"
-           />
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1px] bg-gradient-to-r from-transparent via-primary-500/10 to-transparent rotate-45"></div>
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1px] bg-gradient-to-r from-transparent via-primary-500/10 to-transparent -rotate-45"></div>
-        </div>
+      {/* Grid Lines Overlay */}
+      <div className="absolute inset-0 grid-background opacity-10 pointer-events-none"></div>
+      
+      {/* Left Column: Recovery Sidebar */}
+      <div className="hidden lg:flex flex-1 relative flex-col items-center justify-center p-20 overflow-hidden backdrop-blur-3xl">
+        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary-600/5 to-transparent"></div>
 
         <motion.div 
           initial={{ y: 20, opacity: 0 }}
@@ -76,24 +75,29 @@ const ForgotPassword = () => {
         </div>
       </div>
 
-      {/* Right Column: Recovery Form */}
-      <div className="w-full lg:w-[500px] xl:w-[600px] relative flex flex-col items-center justify-center p-8 sm:p-12 xl:p-20 z-10">
-        <div className="w-full max-w-md">
+      {/* Right Column: Sovereign Recovery Portal */}
+      <div className="w-full lg:w-[600px] xl:w-[700px] relative flex flex-col items-center justify-center p-6 sm:p-12 z-10">
+        <div className="w-full max-w-lg glass-panel p-8 sm:p-14 relative overflow-hidden text-center lg:text-left">
+           <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
+           
            <motion.div
              initial={{ opacity: 0, x: 20 }}
              animate={{ opacity: 1, x: 0 }}
-             className="w-full"
+             className="w-full relative z-10"
            >
-              <div className="mb-10 lg:hidden text-center">
-                 <div className="h-12 w-12 bg-primary-500 rounded-xl flex items-center justify-center shadow-lg border border-primary-400/20 mx-auto">
-                    <img src="/logo.svg" alt="S" className="h-8 w-8" />
-                 </div>
-              </div>
-
               <div className="mb-10">
-                <h3 className="text-3xl font-black text-main tracking-tighter mb-2">Initialize Recovery</h3>
-                <p className="text-sm text-sec font-medium leading-relaxed">
-                  Enter your <span className="text-primary-500 font-bold">Network Identifier</span> to trigger a high-integrity clearance reset code.
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary-500/20 bg-primary-500/5 mb-6">
+                   <div className="h-1.5 w-1.5 rounded-full bg-primary-500 animate-pulse"></div>
+                   <span className="text-[10px] font-black tracking-widest text-primary-500 uppercase">
+                      Integrity Recovery Protocol
+                   </span>
+                </div>
+                
+                <h3 className="text-4xl font-black text-main tracking-tighter mb-4 leading-tight">
+                   Initialize Recovery
+                </h3>
+                <p className="text-sm text-sec font-medium leading-relaxed opacity-60">
+                   Enter your <span className="text-primary-500 font-black">Network Identifier</span> to trigger a high-integrity clearance reset code.
                 </p>
               </div>
 
