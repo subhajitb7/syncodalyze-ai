@@ -1,11 +1,15 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+
 import { AuthContext } from '../context/AuthContext';
-import { ArrowLeft, Users, Trash2, Crown, ShieldCheck, User as UserIcon, FolderOpen, X, UserPlus, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Users, Trash2, Crown, ShieldCheck, User as UserIcon, FolderOpen, X, UserPlus, MessageSquare, Plus, ChevronRight } from 'lucide-react';
+
 import TeamChatDrawer from '../components/TeamChatDrawer';
 import { SocketPubSubContext } from '../context/SocketPubSubContext';
 import ConfirmModal from '../components/ConfirmModal';
+import KernelAuditTrail from '../components/KernelAuditTrail';
 
 const TeamDetail = () => {
   const { id } = useParams();
@@ -134,141 +138,250 @@ const TeamDetail = () => {
   if (!team) return <div className="text-center py-20 text-sec font-medium">Team not found.</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-      <Link to="/teams" className="flex items-center gap-2 text-sec hover:text-main font-medium transition-colors mb-6 text-sm">
-        <ArrowLeft className="h-4 w-4" /> Back to Teams
-      </Link>
+    <div className="min-h-screen grid-background pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        
+        {/* Breadcrumb / Back Link */}
+        <motion.div 
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="mb-8"
+        >
+          <Link to="/teams" className="flex items-center gap-2 text-sec hover:text-primary-500 font-black uppercase tracking-[0.3em] transition-all text-[9px] group">
+            <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" /> 
+            Return to Personnel Hub
+          </Link>
+        </motion.div>
 
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 bg-purple-500/10 rounded-xl flex items-center justify-center">
-            <Users className="h-6 w-6 text-purple-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-main leading-none">{team.name}</h1>
-            <p className="text-sec text-sm mt-1 font-medium">{team.description || 'No description'}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {myRole && (
-            <button
-              onClick={() => setIsChatOpen(true)}
-              className="h-10 w-10 flex items-center justify-center bg-ter border border-col rounded-xl text-sec hover:text-primary-500 hover:border-primary-500/50 transition-all group"
-              title="Team Chat"
+        {/* Dashboard Header - Tactical Style */}
+        <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-10 mb-12">
+           <motion.div 
+             initial={{ y: 20, opacity: 0 }}
+             animate={{ y: 0, opacity: 1 }}
+             className="flex-1"
+           >
+              <div className="flex items-center gap-2 mb-4">
+                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                 <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em]">Status: Active_Node</span>
+              </div>
+              
+              <div className="flex items-center gap-6 mb-4">
+                 <div className="h-16 w-16 bg-purple-500/10 rounded-2xl flex items-center justify-center border border-purple-500/20 shadow-inner">
+                    <Users className="h-8 w-8 text-purple-600" />
+                 </div>
+                 <div>
+                    <h1 className="text-4xl font-black text-main tracking-tighter sm:text-5xl leading-[0.9]">
+                       Unit: <span className="text-primary-500">{team.name}</span>
+                    </h1>
+                 </div>
+              </div>
+
+              <div className="max-w-2xl px-4 py-3 bg-ter/30 border-l-2 border-primary-500/30 rounded-r-xl">
+                 <p className="text-[10px] font-black text-sec uppercase tracking-[0.2em] mb-1 opacity-60">Operational Directive</p>
+                 <p className="text-sm text-sec font-medium leading-relaxed italic">
+                    {team.description || 'Secure collaborative cluster for encrypted technical analysis and team-based review cycles.'}
+                 </p>
+              </div>
+           </motion.div>
+
+           {/* Command Suite */}
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="flex flex-wrap items-center gap-3 p-3 bg-ter/30 rounded-3xl backdrop-blur-3xl shadow-2xl"
             >
-              <MessageSquare className="h-5 w-5 group-hover:scale-110 transition-all" />
-            </button>
-          )}
-
-          {canManage && (
-            <>
-              <button onClick={() => setShowInvite(true)} className="btn-primary flex items-center gap-2 text-sm px-6">
-                <UserPlus className="h-4 w-4" /> Recruit Specialist
-              </button>
-              <button onClick={openLinkProject} className="btn-secondary flex items-center gap-2 text-sm px-6">
-                <FolderOpen className="h-4 w-4" /> Link Project
-              </button>
-            </>
-          )}
+              {myRole && (
+                <button
+                  onClick={() => setIsChatOpen(true)}
+                  className="h-12 w-12 flex items-center justify-center bg-ter hover:bg-primary-500/10 border border-col rounded-xl text-sec hover:text-primary-500 transition-all group"
+                  title="Secure Communications"
+                >
+                  <MessageSquare className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                </button>
+              )}
+              {canManage && (
+                <>
+                  <button 
+                    onClick={() => setShowInvite(true)} 
+                    className="btn-primary flex items-center gap-2 h-12 px-6 shadow-xl shadow-primary-500/20 text-[11px] font-black uppercase tracking-wider"
+                  >
+                    <UserPlus className="h-4 w-4" /> Recruit Specialist
+                  </button>
+                  <button 
+                    onClick={openLinkProject} 
+                    className="bg-ter hover:bg-ter/80 text-main border border-col flex items-center gap-2 h-12 px-6 rounded-xl transition-all text-[11px] font-black uppercase tracking-wider hover:border-primary-500/30"
+                  >
+                    <FolderOpen className="h-4 w-4 text-primary-500" /> Link Asset
+                  </button>
+                </>
+              )}
+           </motion.div>
         </div>
-      </div>
 
-      {/* Grid Wrapper: Consistent with platform grid */}
-      <div className="w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          {/* Left Col: Members (Compact) */}
-          <div className="glass-panel p-4 shadow-xl border-primary-500/10 transition-all duration-500 ease-in-out">
-            <h2 className="text-[10px] font-black text-sec uppercase tracking-[0.2em] mb-4 flex items-center gap-2 opacity-80">
-              <Users className="h-4 w-4 text-primary-500" /> Members ({team.members?.length || 0})
-            </h2>
-            <div className="space-y-2">
-              {team.members?.map((m) => (
-                <div key={m.user?._id || m.user || Math.random()} className="flex items-center justify-between p-2.5 bg-sec/50 border border-col rounded-lg hover:bg-sec transition-all">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-primary-500/10 flex items-center justify-center text-[10px] font-bold text-primary-600 border border-col">
-                      {m.user?.name?.charAt(0).toUpperCase() || '?'}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-xs text-main">{m.user?.name || 'Unknown Member'}</span>
-                        {m.role && roleIcon(m.role)}
-                        <span className="text-[8px] text-sec font-black uppercase tracking-wider opacity-40">{m.role || 'Ghost'}</span>
-                      </div>
-                      <p className="text-[10px] text-sec font-medium opacity-40">{m.user?.email || 'Missing data'}</p>
-                    </div>
-                  </div>
-                  {canManage && m.role !== 'owner' && (m.user?._id || m.user) !== user?._id && (
-                    <div className="flex items-center gap-1.5">
-                      <select
-                        value={m.role}
-                        onChange={(e) => handleRoleChange(m.user?._id || m.user || m._id, e.target.value)}
-                        className="text-[8px] uppercase tracking-widest bg-ter border border-col rounded px-1.5 py-1 text-main font-black cursor-pointer hover:border-primary-500/50 transition-all outline-none"
+        {/* Tactical Grid: Members and Assets */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
+           
+           {/* Section 1: Authorized Operators (3/5) */}
+           <div className="lg:col-span-3 space-y-6">
+              <div className="flex items-center justify-between px-2">
+                 <h2 className="text-[11px] font-black text-main uppercase tracking-[0.4em] flex items-center gap-3">
+                    Authorized Operators <span className="h-5 px-2 bg-primary-500/10 border border-primary-500/20 text-primary-500 rounded flex items-center justify-center tracking-normal text-[10px]">{team.members?.length || 0}</span>
+                 </h2>
+                 <div className="h-[1px] flex-1 mx-6 bg-gradient-to-r from-col/30 to-transparent"></div>
+              </div>
+
+              <motion.div 
+                 variants={{
+                   hidden: { opacity: 0 },
+                   visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
+                 }}
+                 initial="hidden"
+                 animate="visible"
+                 className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              >
+                 {team.members?.map((m) => {
+                    const isUser = (m.user?._id || m.user) === user?._id;
+                    return (
+                      <motion.div 
+                        variants={{ hidden: { y: 10, opacity: 0 }, visible: { y: 0, opacity: 1 } }}
+                        key={m.user?._id || m.user || Math.random()} 
+                        className="glass-panel p-5 flex items-center gap-6 bg-ter/30 border-col/50 hover:border-primary-500/30 group transition-all relative overflow-hidden"
                       >
-                        <option value="member">Member</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                      <button onClick={() => handleRemove(m.user?._id || m.user || m._id)}
-                        className="p-1.5 text-sec hover:text-red-500 hover:bg-red-500/10 rounded transition-all"
-                        title="Remove Member">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+                         {/* Avatar Node */}
+                         <div className="h-14 w-14 rounded-2xl bg-sec border border-col flex items-center justify-center relative shadow-2xl overflow-hidden group-hover:bg-ter transition-colors shrink-0">
+                            <span className="text-base font-black text-primary-500">{m.user?.name?.charAt(0).toUpperCase() || '?'}</span>
+                            {!isUser && (
+                              <div className="absolute top-1.5 right-1.5 h-3 w-3 flex items-center justify-center">
+                                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                              </div>
+                            )}
+                            <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-primary-500/40 to-transparent"></div>
+                         </div>
 
-          {/* Right Col: Projects (Compact) */}
-          <div className="glass-panel p-4 shadow-xl border-purple-500/10 transition-all duration-500 ease-in-out">
-            <h2 className="text-[10px] font-black text-sec uppercase tracking-[0.2em] mb-4 flex items-center gap-2 opacity-80">
-              <FolderOpen className="h-4 w-4 text-purple-500" /> Linked Projects ({team.projects?.length || 0})
-            </h2>
-            {!team.projects || team.projects.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 opacity-30">
-                <FolderOpen className="h-8 w-8 mb-2" />
-                <p className="text-[10px] font-black uppercase tracking-widest text-main">No projects linked</p>
+                         {/* Identity Stack */}
+                         <div className="flex flex-col gap-2 min-w-0 flex-1 transition-all">
+                            <div className="flex items-center gap-3">
+                               <span className="text-sm font-black text-main group-hover:text-primary-500 transition-colors tracking-tight uppercase whitespace-nowrap">{m.user?.name || 'Unknown'}</span>
+                               {m.role === 'owner' ? (
+                                 <Crown className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                               ) : m.role === 'admin' ? (
+                                 <ShieldCheck className="h-3.5 w-3.5 text-primary-500 shrink-0" />
+                               ) : null}
+                            </div>
+                            
+                             <div className="flex flex-col gap-1.5">
+                               <div className="flex items-center gap-2">
+                                 {canManage && m.role !== 'owner' && !isUser ? (
+                                   <div className="relative group/role">
+                                     <select
+                                       value={m.role}
+                                       onChange={(e) => handleRoleChange(m.user?._id || m.user || m._id, e.target.value)}
+                                       className={`text-[8px] font-black uppercase tracking-[0.2em] px-2 py-1 rounded border leading-none bg-main/40 cursor-pointer hover:border-primary-500 transition-all outline-none appearance-none pr-6 ${
+                                         m.role === 'admin' ? 'text-primary-600 border-primary-500/20' : 'text-sec/60 border-col'
+                                       }`}
+                                     >
+                                       <option value="member">MEMBER</option>
+                                       <option value="admin">ADMIN</option>
+                                     </select>
+                                     <ChevronRight className="h-2.5 w-2.5 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-sec/40 rotate-90" />
+                                   </div>
+                                 ) : (
+                                   <span className={`text-[8px] font-black uppercase tracking-[0.2em] px-2 py-1 rounded border leading-none shrink-0 ${
+                                     m.role === 'owner' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' :
+                                     m.role === 'admin' ? 'bg-primary-500/10 text-primary-600 border-primary-500/20' :
+                                     'bg-sec/50 text-sec/60 border-col'
+                                   }`}>
+                                     {m.role || 'Member'}
+                                   </span>
+                                 )}
+                               </div>
+                               <span className="text-[10px] text-sec font-bold opacity-30 italic break-all tracking-tighter leading-none">
+                                 {m.user?.email || 'OFFLINE_NODE'}
+                               </span>
+                            </div>
+                         </div>
+
+                         {/* Minimalist Removal Action */}
+                         {canManage && m.role !== 'owner' && !isUser && (
+                           <button 
+                             onClick={() => handleRemove(m.user?._id || m.user || m._id)}
+                             className="absolute right-4 top-1/2 -translate-y-1/2 h-9 w-9 flex items-center justify-center text-sec/20 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100 border border-transparent hover:border-rose-500/20"
+                             title="Revoke Permissions"
+                           >
+                             <Trash2 className="h-4.5 w-4.5" />
+                           </button>
+                         )}
+                      </motion.div>
+                    );
+                 })}
+              </motion.div>
+           </div>
+
+           {/* Section 2: Integrated Asset Cluster (2/5) */}
+           <div className="lg:col-span-2 space-y-6">
+              <div className="flex items-center justify-between px-2">
+                 <h2 className="text-[11px] font-black text-main uppercase tracking-[0.4em] flex items-center gap-3">
+                    Asset Cluster <span className="text-sec opacity-20 font-medium">/ SYNC_ACTIVE</span>
+                 </h2>
+                 <div className="h-[1px] flex-1 ml-6 bg-gradient-to-r from-col/30 to-transparent"></div>
               </div>
-            ) : (
-              <div className="space-y-2">
-                {team.projects.map((p) => (
-                  <Link key={p._id} to={`/projects/${p._id}`}
-                    className="flex items-center justify-between p-2.5 bg-sec/50 border border-col rounded-lg hover:border-primary-500/50 hover:shadow-xl hover:bg-sec transition-all group">
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 bg-primary-500/10 rounded-xl flex items-center justify-center group-hover:bg-primary-500 group-hover:text-white transition-all border border-transparent group-hover:border-primary-400">
-                        <FolderOpen className="h-4 w-4 text-sec group-hover:text-white" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-xs text-main group-hover:text-primary-500 transition-colors">{p.name}</p>
-                        <p className="text-[8px] text-sec font-black uppercase tracking-widest opacity-60 mt-0.5">
-                          {p.language} • <span className="text-primary-500 font-bold tracking-normal italic">{p.owner?.name || 'Unknown'}</span>
-                        </p>
-                      </div>
+
+              <motion.div 
+                 initial={{ opacity: 0, x: 20 }}
+                 animate={{ opacity: 1, x: 0 }}
+                 className="space-y-3"
+              >
+                 {!team.projects || team.projects.length === 0 ? (
+                    <div className="glass-panel p-16 text-center border-dashed border-2 border-col grayscale opacity-40">
+                       <FolderOpen className="h-10 w-10 mx-auto text-sec mb-4" />
+                       <p className="text-[10px] font-black uppercase tracking-[0.4em] text-main">Zero Assets Linked</p>
+                       <p className="text-[9px] font-bold text-sec italic mt-1">Pending terminal integration...</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {canManage && (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleRemoveProject(p._id);
-                          }}
-                          className="h-8 w-8 flex items-center justify-center text-sec hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                          title="Un-link Project"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
-                      <div className="h-6 w-6 rounded-full border border-col flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                        <ArrowLeft className="h-3 w-3 rotate-180 text-sec" />
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+                 ) : (
+                    team.projects.map((p) => (
+                      <Link key={p._id} to={`/projects/${p._id}`}
+                        className="glass-panel p-5 box-border flex items-center justify-between bg-ter/30 border-col/50 hover:border-primary-500/50 hover:bg-sec group transition-all"
+                      >
+                         <div className="flex items-center gap-5">
+                            <div className="h-12 w-12 bg-sec/50 border border-col/50 rounded-2xl flex items-center justify-center group-hover:bg-primary-500 group-hover:text-white transition-all shadow-lg overflow-hidden relative">
+                               <FolderOpen className="h-5 w-5 text-sec group-hover:text-white relative z-10" />
+                               <div className="absolute inset-0 bg-primary-500 opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                            </div>
+                            <div>
+                               <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-black text-sm text-main group-hover:text-primary-500 transition-colors tracking-tight">{p.name}</h3>
+                                  <span className="text-[9px] font-black text-primary-500 px-1.5 py-0.5 bg-primary-500/10 rounded uppercase tracking-tighter">{p.language}</span>
+                               </div>
+                               <div className="flex items-center gap-2">
+                                  <span className="text-[9px] text-sec font-bold opacity-30 italic">Cluster: {p.owner?.name || 'ROOT'}</span>
+                                  <div className="h-1 w-1 rounded-full bg-col/50"></div>
+                                  <span className="text-[8px] font-black text-emerald-500/60 uppercase tracking-widest flex items-center gap-1">
+                                     <ShieldCheck className="h-2.5 w-2.5" /> High Integrity
+                                  </span>
+                                </div>
+                            </div>
+                         </div>
+                         
+                         <div className="flex items-center gap-3">
+                            {canManage && (
+                              <button
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRemoveProject(p._id); }}
+                                className="h-9 w-9 flex items-center justify-center text-sec hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                                title="Sever Asset Link"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
+                            <div className="h-8 w-8 rounded-xl border border-col flex items-center justify-center group-hover:border-primary-500/50 group-hover:bg-primary-500/5 transition-all">
+                               <ArrowLeft className="h-4 w-4 rotate-180 text-sec group-hover:text-primary-500" />
+                            </div>
+                         </div>
+                      </Link>
+                    ))
+                 )}
+              </motion.div>
+           </div>
         </div>
-      </div>
 
       <TeamChatDrawer
         teamId={id}
@@ -276,60 +389,120 @@ const TeamDetail = () => {
         onClose={() => setIsChatOpen(false)}
       />
 
-
-      {/* Invite Modal */}
-      {showInvite && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="glass-panel w-full max-w-md p-8 relative shadow-2xl">
-            <button onClick={() => { setShowInvite(false); setError(null); }} className="absolute top-4 right-4 text-sec hover:text-main">
-              <X className="h-5 w-5" />
-            </button>
-            <h2 className="text-2xl font-bold text-main mb-2">Recruit Member</h2>
-            <p className="text-sec text-sm mb-6 font-medium">Enter the Email or the unique <span className="text-primary-500 font-black">Node Hash (ID)</span> of a registered user.</p>
-            {error && <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-lg mb-4 text-sm">{error}</div>}
-            <form onSubmit={handleInvite} className="flex flex-col gap-4">
-              <input 
-                type="text" 
-                value={inviteIdentifier} 
-                onChange={(e) => setInviteIdentifier(e.target.value)} 
-                required 
-                className="glass-input" 
-                placeholder="user@email.com or SYN-A28-9X6..." 
-              />
-              <button type="submit" className="btn-primary">Initialize Recruitment</button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Link Project Modal */}
-      {showLinkProject && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="glass-panel w-full max-w-md p-8 relative shadow-2xl">
-            <button onClick={() => setShowLinkProject(false)} className="absolute top-4 right-4 text-sec hover:text-main">
-              <X className="h-5 w-5" />
-            </button>
-            <h2 className="text-2xl font-bold text-main mb-6">Link Project</h2>
-            {myProjects.length === 0 ? (
-              <p className="text-sec text-center font-medium py-4">No projects found. Create one first.</p>
-            ) : (
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {myProjects.map((p) => (
-                  <button key={p._id} onClick={() => handleLinkProject(p._id)}
-                    className="w-full text-left p-3 bg-sec border border-col rounded-lg hover:border-primary-500/50 hover:shadow-lg transition-all flex items-center gap-3 group">
-                    <FolderOpen className="h-5 w-5 text-sec group-hover:text-primary-600 transition-colors" />
-                    <div>
-                      <p className="font-bold text-sm text-main">{p.name}</p>
-                      <p className="text-xs text-sec font-medium">{p.language}</p>
-                    </div>
+      {/* Optimized Layout for Modals */}
+      <AnimatePresence>
+        {showInvite && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-[200] p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="glass-panel w-full max-w-xl p-0 relative shadow-[0_50px_100px_rgba(0,0,0,0.6)] border-col"
+            >
+              <div className="p-8 border-b border-col bg-ter/30 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 via-purple-500 to-primary-500"></div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-black text-primary-500 uppercase tracking-[0.3em]">Authorized Personnel Intake</span>
+                  <button onClick={() => { setShowInvite(false); setError(null); }} className="p-2 text-sec hover:text-main transition-colors">
+                    <X className="h-5 w-5" />
                   </button>
-                ))}
+                </div>
+                <h2 className="text-3xl font-black text-main tracking-tighter">Recruit <span className="text-primary-500">Specialist</span></h2>
               </div>
-            )}
+              
+              <form onSubmit={handleInvite} className="p-8 space-y-6">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-sec uppercase tracking-widest px-1">Network Identifier (Email / ID)</label>
+                  <input 
+                    type="text" value={inviteIdentifier} onChange={(e) => setInviteIdentifier(e.target.value)} 
+                    required className="glass-input h-14 w-full font-black text-lg tracking-tight" placeholder="specialist@sync.internal or NODE_H_8829" 
+                  />
+                  <p className="text-[9px] text-sec/40 font-bold uppercase tracking-widest px-1 italic">Identity verification required before clearance grant.</p>
+                </div>
+                {error && <div className="bg-rose-500/10 border border-rose-500/20 text-rose-500 p-4 rounded-xl text-[10px] font-black uppercase tracking-widest">{error}</div>}
+                <div className="flex gap-4 pt-4">
+                  <button type="submit" className="flex-1 btn-primary h-14 font-black uppercase tracking-widest px-8">Dispatch Request</button>
+                  <button type="button" onClick={() => setShowInvite(false)} className="px-10 btn-secondary h-14 font-black uppercase tracking-widest border-col">Abort</button>
+                </div>
+              </form>
+            </motion.div>
           </div>
-        </div>
-      )}
-      {/* Confirmation Modal */}
+        )}
+
+        {showLinkProject && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-[200] p-4">
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.95, y: 20 }}
+               animate={{ opacity: 1, scale: 1, y: 0 }}
+               exit={{ opacity: 0, scale: 0.95, y: 20 }}
+               className="glass-panel w-full max-w-xl p-0 relative shadow-[0_50px_100px_rgba(0,0,0,0.6)] border-col"
+             >
+                <div className="p-8 border-b border-col bg-ter/30 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-primary-500 to-purple-500"></div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-black text-purple-500 uppercase tracking-[0.3em]">Asset Cluster Configuration</span>
+                    <button onClick={() => setShowLinkProject(false)} className="p-2 text-sec hover:text-main transition-colors">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  <h2 className="text-3xl font-black text-main tracking-tighter">Link <span className="text-purple-500">Repository Cluster</span></h2>
+                </div>
+
+                <div className="p-8">
+                  {myProjects.length === 0 ? (
+                    <div className="py-20 text-center grayscale opacity-40">
+                       <FolderOpen className="h-12 w-12 mx-auto mb-4" />
+                       <p className="text-xs font-black uppercase tracking-widest">No primary assets detected.</p>
+                       <p className="text-[10px] font-medium italic mt-1">Please initialize a project repository first.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                      {myProjects.map((p) => (
+                        <button key={p._id} onClick={() => handleLinkProject(p._id)}
+                          className="w-full text-left p-4 bg-ter/30 border border-col rounded-2xl hover:border-primary-500/50 hover:bg-sec transition-all flex items-center gap-4 group">
+                          <div className="h-10 w-10 bg-sec border border-col rounded-xl flex items-center justify-center group-hover:bg-primary-500 group-hover:text-white transition-all shadow-inner">
+                             <FolderOpen className="h-4 w-4 text-sec group-hover:text-white" />
+                          </div>
+                          <div>
+                            <p className="font-black text-sm text-main group-hover:text-primary-500 transition-colors uppercase tracking-tight">{p.name}</p>
+                            <p className="text-[9px] text-sec font-bold uppercase tracking-widest opacity-40">{p.language} • INTEGRITY_VERIFIED</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+         {/* Kernel Audit Trail - Scoped to Team */}
+         <div className="mt-16 space-y-6">
+            <div className="flex items-center justify-between px-2">
+               <h2 className="text-[11px] font-black text-main uppercase tracking-[0.4em] flex items-center gap-3">
+                  Kernel Audit Trail <span className="text-sec opacity-20 font-medium">/ NODE_SPECIFIC</span>
+               </h2>
+               <div className="h-[1px] flex-1 mx-6 bg-gradient-to-r from-col/30 to-transparent"></div>
+            </div>
+            
+            <div className="glass-panel overflow-hidden border-col shadow-2xl">
+               <div className="p-8 border-b border-col bg-ter/30 flex items-center justify-between">
+                   <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary-500/10 rounded-lg"><History className="h-5 w-5 text-primary-500" /></div>
+                      <span className="text-[10px] font-black text-main uppercase tracking-widest">Chronological Operational Telemetry</span>
+                   </div>
+                   <div className="flex items-center gap-2 px-3 py-1.5 bg-primary-500/5 border border-primary-500/10 rounded-full">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary-500 animate-pulse"></div>
+                      <span className="text-[8px] font-black text-primary-500 uppercase tracking-widest italic">Live Feed Synchronized</span>
+                   </div>
+               </div>
+               <div className="p-8">
+                  <KernelAuditTrail teamId={id} />
+               </div>
+            </div>
+         </div>
+      </div>
       <ConfirmModal
         isOpen={confirmConfig.isOpen}
         onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}

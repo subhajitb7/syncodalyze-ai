@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, CheckSquare, MessageSquare, FileUp, Sparkles, Inbox, Trash2, Info } from 'lucide-react';
+import { Bell, CheckSquare, MessageSquare, FileUp, Sparkles, Inbox, Trash2, Info, X } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
 const NotificationBell = () => {
@@ -102,74 +102,110 @@ const NotificationBell = () => {
       <AnimatePresence>
         {open && (
           <motion.div 
-            initial={{ opacity: 0, y: 12, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.95 }}
-            className="absolute right-0 mt-4 w-96 glass-panel shadow-2xl z-[150] overflow-hidden border-col shadow-primary-500/5"
+            initial={{ opacity: 0, y: 12, scale: 0.98, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, y: 12, scale: 0.98, filter: 'blur(10px)' }}
+            className="absolute right-0 mt-4 w-[420px] glass-panel shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] z-[150] overflow-hidden border-col bg-main/90 backdrop-blur-3xl"
           >
-            <div className="flex items-center justify-between p-5 border-b border-col bg-ter/30">
-              <div>
-                <h3 className="text-xs font-black text-main uppercase tracking-widest">Inbox Center</h3>
-                <p className="text-[10px] text-sec font-bold opacity-60 mt-0.5">Awaiting Attention • {data.unreadCount} New</p>
-              </div>
-              {data.unreadCount > 0 && (
-                <button 
+            {/* Hub Header - Tactical Style */}
+            <div className="p-5 border-b border-primary-500/10 bg-ter/30 flex items-center justify-between relative overflow-hidden">
+               <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary-500/50 to-transparent"></div>
+               <div>
+                 <div className="flex items-center gap-2 mb-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary-500 animate-pulse"></div>
+                    <h3 className="text-[10px] font-black text-main uppercase tracking-[0.3em]">Intelligence Hub</h3>
+                 </div>
+                 <p className="text-[9px] text-sec font-bold opacity-60 tracking-wider">Awaiting Attention • {data.unreadCount} Concurrent Signals</p>
+               </div>
+               <button 
                   onClick={handleMarkAllRead} 
-                  className="text-[10px] uppercase font-black text-primary-500 hover:text-primary-600 tracking-widest border border-primary-500/20 px-3 py-1.5 rounded-lg hover:bg-primary-500/5 transition-all"
+                  className="px-3 py-1.5 rounded-lg bg-primary-500/10 border border-primary-500/20 text-[9px] font-black text-primary-500 uppercase tracking-widest hover:bg-primary-500/20 transition-all flex items-center gap-2 group"
                 >
+                  <Trash2 className="h-3 w-3 group-hover:rotate-12 transition-transform" />
                   Clear All
                 </button>
-              )}
             </div>
 
-            <div className="max-h-[420px] overflow-y-auto custom-scrollbar">
+            <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
               {data.notifications.length === 0 ? (
-                <div className="py-20 flex flex-col items-center justify-center text-center p-8 grayscale opacity-50">
-                   <div className="h-16 w-16 bg-ter rounded-3xl flex items-center justify-center mb-4">
-                      <Inbox className="h-8 w-8 text-sec" />
+                <div className="py-24 flex flex-col items-center justify-center text-center p-8">
+                   <div className="relative mb-6">
+                      <div className="absolute inset-0 bg-primary-500/20 blur-2xl rounded-full"></div>
+                      <div className="relative h-20 w-20 bg-ter/50 border border-col rounded-3xl flex items-center justify-center">
+                         <Inbox className="h-10 w-10 text-sec/20" />
+                      </div>
                    </div>
-                   <p className="text-xs font-black text-sec uppercase tracking-widest">Zero Latency</p>
-                   <p className="text-[10px] font-medium text-sec mt-1">Status: No incoming transmissions detected.</p>
+                   <h4 className="text-[11px] font-black text-main uppercase tracking-[0.4em] mb-2">Zero Latency</h4>
+                   <p className="text-[10px] font-bold text-sec/40 uppercase tracking-widest italic">Status: No incoming transmissions detected.</p>
                 </div>
               ) : (
-                <div className="divide-y divide-col/50">
-                  {data.notifications.slice(0, 15).map((notif) => (
-                    <button
-                      key={notif._id}
-                      onClick={() => handleClick(notif)}
-                      className={`w-full text-left p-4 hover:bg-primary-500/[0.03] transition-all flex gap-4 group ${!notif.read ? 'bg-primary-500/[0.02]' : ''}`}
-                    >
-                      <div className={`mt-1 h-10 w-10 shrink-0 rounded-xl flex items-center justify-center transition-all ${
-                        !notif.read ? 'bg-primary-500/10 scale-105' : 'bg-ter outline outline-1 outline-col/10'
-                      }`}>
-                        {getTypeIcon(notif.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-xs leading-relaxed mb-1.5 ${!notif.read ? 'text-main font-bold pr-4' : 'text-sec font-medium'}`}>
-                          {notif.message}
-                          {!notif.read && <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary-500 ml-2 animate-pulse" />}
-                        </p>
-                        <div className="flex items-center justify-between">
-                           <span className="text-[9px] font-black uppercase text-sec tracking-tighter opacity-40 group-hover:opacity-100 transition-opacity">
-                             {notif.type.replace('_', ' ')}
-                           </span>
-                           <span className="text-[9px] font-bold text-sec italic">
-                             {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                           </span>
+                <div className="divide-y divide-primary-500/10">
+                  {data.notifications.slice(0, 15).map((notif, idx) => {
+                    const statusColor = 
+                      notif.type === 'review_complete' ? 'bg-emerald-500' : 
+                      notif.type === 'file_updated' ? 'bg-amber-500' : 
+                      notif.type === 'new_comment' ? 'bg-primary-500' : 'bg-sec';
+                    
+                    return (
+                      <motion.button
+                        initial={{ x: -20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: idx * 0.03 }}
+                        key={notif._id}
+                        onClick={() => handleClick(notif)}
+                        className={`w-full text-left p-5 hover:bg-primary-500/[0.04] transition-all flex gap-5 group relative overflow-hidden ${!notif.read ? 'bg-primary-500/[0.02]' : ''}`}
+                      >
+                        {/* Status Bar Indicator */}
+                        {!notif.read && (
+                           <div className={`absolute left-0 top-0 w-1 h-full ${statusColor} shadow-[0_0_15px_rgba(var(--status-rgb),0.5)]`}></div>
+                        )}
+                        
+                        <div className={`mt-0.5 h-12 w-12 shrink-0 rounded-2xl flex items-center justify-center transition-all ${
+                          !notif.read 
+                          ? 'bg-sec/20 border border-col/50 shadow-lg' 
+                          : 'bg-ter/30 border border-col/10 grayscale'
+                        }`}>
+                          {getTypeIcon(notif.type)}
                         </div>
-                      </div>
-                    </button>
-                  ))}
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start mb-2 pr-4">
+                             <span className={`text-[8px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded border ${
+                               !notif.read ? 'text-primary-500 border-primary-500/20 bg-primary-500/5' : 'text-sec/40 border-col/10'
+                             }`}>
+                               {notif.type.replace('_', ' ')}
+                             </span>
+                             <span className="text-[9px] font-bold text-sec opacity-40">
+                               {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                             </span>
+                          </div>
+                          <p className={`text-[11px] leading-relaxed tracking-wide ${!notif.read ? 'text-main font-bold' : 'text-sec font-medium'}`}>
+                            {notif.message}
+                          </p>
+                        </div>
+
+                        {/* Quick Mark as Read (Visual Only for now unless endpoint exists) */}
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all scale-75 hover:scale-100">
+                           <div className="p-2 bg-ter/80 rounded-xl border border-col shadow-xl">
+                              <CheckSquare className="h-4 w-4 text-primary-500" />
+                           </div>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
                 </div>
               )}
             </div>
             
-            <button 
-              className="w-full p-4 text-[10px] font-black text-sec uppercase tracking-widest border-t border-col bg-ter/30 hover:text-main transition-colors"
-              onClick={() => setOpen(false)}
-            >
-              Close Event Hub
-            </button>
+            <div className="p-3 border-t border-primary-500/10 bg-ter/20">
+               <button 
+                 className="w-full py-3 rounded-xl text-[10px] font-black text-sec uppercase tracking-[0.3em] hover:bg-ter hover:text-main transition-all flex items-center justify-center gap-3 group"
+                 onClick={() => setOpen(false)}
+               >
+                 <X className="h-3 w-3 group-hover:rotate-90 transition-transform" />
+                 Dismiss Hub
+               </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -3,6 +3,7 @@ import User from '../models/User.model.js';
 import Team from '../models/Team.model.js';
 import Notification from '../models/Notification.model.js';
 import { getPopulatedTeam } from '../utils/teamUtils.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 // @desc    Create a new team
 // @route   POST /api/teams
@@ -15,6 +16,13 @@ export const createTeam = async (req, res) => {
       owner: req.user._id,
       members: [{ user: req.user._id, role: 'owner' }],
     });
+
+    // Log Team Creation
+    await logActivity('TEAM_CREATED', req.user._id, `Created team unit: ${team.name}`, {
+      team: team._id,
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
+
     res.status(201).json(team);
   } catch (error) {
     console.error(error);
@@ -90,11 +98,11 @@ export const inviteMember = async (req, res) => {
     team.members.push({ user: userToInvite._id, role: 'member' });
     await team.save();
 
-    // Notify the invited user
-    await Notification.create({
-      user: userToInvite._id,
-      type: 'team_invite',
-      message: `You were added to team "${team.name}"`,
+    // Log Member Invitation
+    await logActivity('MEMBER_INVITED', req.user._id, `Invited ${userToInvite.name} to team ${team.name}`, {
+      team: team._id,
+      targetUser: userToInvite._id,
+      ipAddress: req.ip || req.connection.remoteAddress
     });
 
     const populated = await getPopulatedTeam(team._id);
@@ -137,6 +145,12 @@ export const removeMember = async (req, res) => {
 
     await team.save();
 
+    // Log Member Removal
+    await logActivity('MEMBER_REMOVED', req.user._id, `Removed member ID: ${req.params.userId} from team ${team.name}`, {
+      team: team._id,
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
+
     const populated = await getPopulatedTeam(team._id);
 
     res.json(populated);
@@ -168,6 +182,12 @@ export const updateMemberRole = async (req, res) => {
     member.role = role;
     await team.save();
 
+    // Log Role Update
+    await logActivity('ROLE_UPDATED', req.user._id, `Updated role for member ID: ${req.params.userId} to ${role} in team ${team.name}`, {
+      team: team._id,
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
+
     const populated = await getPopulatedTeam(team._id);
 
     res.json(populated);
@@ -191,6 +211,13 @@ export const addProjectToTeam = async (req, res) => {
 
     team.projects.push(projectId);
     await team.save();
+
+    // Log Project Linkage
+    await logActivity('TEAM_LINK_PROJECT', req.user._id, `Linked project ID: ${projectId} to team ${team.name}`, {
+      team: team._id,
+      metadata: { projectId },
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
 
     const populated = await getPopulatedTeam(team._id);
 
@@ -216,6 +243,13 @@ export const removeProjectFromTeam = async (req, res) => {
 
     team.projects = team.projects.filter((p) => p.toString() !== req.params.projectId);
     await team.save();
+
+    // Log Project Unlinkage
+    await logActivity('TEAM_UNLINK_PROJECT', req.user._id, `Severed link for project ID: ${req.params.projectId} from team ${team.name}`, {
+      team: team._id,
+      metadata: { projectId: req.params.projectId },
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
 
     const populated = await getPopulatedTeam(team._id);
 

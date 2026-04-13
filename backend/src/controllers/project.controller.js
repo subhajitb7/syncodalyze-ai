@@ -6,6 +6,7 @@ import User from '../models/User.model.js';
 import Comment from '../models/Comment.model.js';
 import axios from 'axios';
 import { getProjectAccess } from '../utils/projectUtils.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 /**
  * Local helper to post a system message to the project discussion
@@ -56,6 +57,12 @@ export const createProject = async (req, res) => {
       type: 'project_created',
       message: `Project "${name}" was created successfully.`,
       link: `/projects/${project._id}`,
+    });
+
+    // Log Project Creation
+    await logActivity('PROJECT_CREATED', req.user._id, `Initialized project node: ${name}`, {
+      metadata: { projectId: project._id, language, repoProvider },
+      ipAddress: req.ip || req.connection.remoteAddress
     });
 
     res.status(201).json(project);
@@ -274,6 +281,12 @@ export const deleteProject = async (req, res) => {
 
     await CodeFile.deleteMany({ project: project._id });
     await Project.findByIdAndDelete(req.params.id);
+
+    // Log Project Deletion
+    await logActivity('PROJECT_DELETED', req.user._id, `Permanently purged project node: ${project.name}`, {
+      metadata: { projectId: project._id },
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
 
     res.json({ message: 'Project deleted' });
   } catch (error) {

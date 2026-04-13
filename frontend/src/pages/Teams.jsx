@@ -172,17 +172,16 @@ const Teams = () => {
               <motion.div key={team._id} variants={itemVariants}>
                 <Link
                   to={`/teams/${team._id}`}
-                  className="glass-panel p-0 group overflow-hidden border-col transition-all hover:shadow-[0_20px_40px_rgba(0,0,0,0.1)] flex flex-col min-h-[260px]"
+                  className="glass-panel p-0 group overflow-hidden border-col transition-all hover:shadow-[0_20px_40px_rgba(0,0,0,0.1)] flex flex-col h-full"
                 >
                   <div className="p-6 flex-1 flex flex-col">
                     <div className="flex justify-between items-start mb-6">
                       <div className="flex items-center gap-4">
-                        <div className="relative">
-                           <div className="h-12 w-12 bg-purple-500/10 rounded-2xl flex items-center justify-center border border-purple-500/20 group-hover:bg-purple-500/20 transition-all duration-500">
-                             <Users className="h-6 w-6 text-purple-600" />
-                           </div>
-                           <div className="absolute -top-1 -right-1 h-3 w-3 bg-purple-500 rounded-full border-2 border-main ring-1 ring-purple-500/30 shadow-lg"></div>
-                        </div>
+                         <div className="relative">
+                            <div className="h-12 w-12 bg-purple-500/10 rounded-2xl flex items-center justify-center border border-purple-500/20 group-hover:bg-purple-500/20 transition-all duration-500">
+                              <Users className="h-6 w-6 text-purple-600" />
+                            </div>
+                         </div>
                         <div>
                           <h3 className="font-black text-lg text-main group-hover:text-primary-500 transition-colors tracking-tight leading-none mb-1.5">{team.name}</h3>
                           <div className="flex items-center gap-2">

@@ -244,7 +244,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="w-full md:w-64 h-64 shrink-0">
+              <div className="w-full md:w-64 h-64 min-h-[256px] shrink-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
                     <PolarGrid stroke="var(--border-col)" />
@@ -324,7 +324,7 @@ const Dashboard = () => {
                     <Activity className="h-5 w-5 text-emerald-500" />
                   </div>
                 </div>
-                <div className="h-24 w-full">
+                <div className="h-24 min-h-[96px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
                       <defs>
@@ -349,7 +349,7 @@ const Dashboard = () => {
                     <Bug className="h-5 w-5 text-red-500" />
                   </div>
                 </div>
-                <div className="h-24 w-full">
+                <div className="h-24 min-h-[96px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData}>
                       <Line type="step" dataKey="bugs" stroke="#ef4444" strokeWidth={3} dot={false} />

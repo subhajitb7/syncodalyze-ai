@@ -10,6 +10,7 @@ import {
   Copy, Check
 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import KernelAuditTrail from '../components/KernelAuditTrail';
 
 const Profile = () => {
   const { user, setUser } = useContext(AuthContext);
@@ -467,11 +468,24 @@ const Profile = () => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="glass-panel p-20 text-center grayscale opacity-30 border-dashed border-2 border-col flex flex-col items-center justify-center"
                 >
-                  <Cpu className="h-12 w-12 mb-4" />
-                  <h3 className="text-xl font-black text-main uppercase tracking-tighter mb-2">Logging Sub-system Offline</h3>
-                  <p className="text-xs text-sec font-medium italic">Operational logs are currently being archived in the cloud repository. Local view functionality will be established in the next patch.</p>
+                   <div className="glass-panel overflow-hidden border-col shadow-2xl">
+                      <div className="p-8 border-b border-col bg-ter/30">
+                         <div className="flex items-center justify-between">
+                            <h3 className="text-xl font-black text-main uppercase tracking-tighter flex items-center gap-3">
+                              <div className="p-2 bg-primary-500/10 rounded-lg"><History className="h-5 w-5 text-primary-500" /></div>
+                              Operational Audit Logs
+                            </h3>
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                               <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                               <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Logging Sub-system Online</span>
+                            </div>
+                         </div>
+                      </div>
+                      <div className="p-8">
+                         <KernelAuditTrail />
+                      </div>
+                   </div>
                 </motion.div>
               )}
             </AnimatePresence>

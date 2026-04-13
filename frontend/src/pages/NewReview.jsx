@@ -11,7 +11,7 @@ import python from 'react-syntax-highlighter/dist/esm/languages/prism/python';
 import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { ThemeContext } from '../context/ThemeContext';
-import { AlertTriangle, CheckCircle, Loader2, Code, Sparkles, ChevronDown, ZapOff, FileCode, Upload, History, X, ChevronRight, Trash2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Loader2, Code, Sparkles, ChevronDown, ZapOff, FileCode, Upload, History, X, ChevronRight, Trash2, AlignLeft } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -111,26 +111,31 @@ const NewReview = () => {
     if (isManualOverride) return;
 
     const timer = setTimeout(() => {
-      if (codeSnippet.length > 5) {
+      if (codeSnippet.length > 10) {
         try {
-          const detect = hljs.highlightAuto(codeSnippet);
+          const supportedLangs = [
+            'javascript', 'typescript', 'python', 'java', 'cpp', 'go', 'ruby', 
+            'php', 'rust', 'kotlin', 'swift', 'csharp', 'sql', 'shell', 'dart', 'scala'
+          ];
+          
+          const detect = hljs.highlightAuto(codeSnippet, supportedLangs);
           if (detect.language) {
             let lang = detect.language.toLowerCase();
             const mapping = {
-              'js': 'javascript', 'javascript': 'javascript', 'jsx': 'javascript', 'node': 'javascript',
+              'js': 'javascript', 'javascript': 'javascript', 'jsx': 'javascript', 'node': 'javascript', 'react': 'javascript',
               'ts': 'typescript', 'typescript': 'typescript', 'tsx': 'typescript',
               'py': 'python', 'python': 'python',
               'java': 'java',
-              'cpp': 'cpp', 'c++': 'cpp', 'c': 'cpp',
+              'cpp': 'cpp', 'c++': 'cpp', 'c': 'cpp', 'cc': 'cpp',
               'go': 'go', 'golang': 'go',
               'rb': 'ruby', 'ruby': 'ruby',
               'php': 'php',
               'rs': 'rust', 'rust': 'rust',
               'kt': 'kotlin', 'kotlin': 'kotlin',
               'swift': 'swift',
-              'cs': 'csharp', 'csharp': 'csharp',
-              'sql': 'sql',
-              'sh': 'shell', 'bash': 'shell', 'shell': 'shell',
+              'cs': 'csharp', 'csharp': 'csharp', 'dotnet': 'csharp',
+              'sql': 'sql', 'postgresql': 'sql', 'mysql': 'sql',
+              'sh': 'shell', 'bash': 'shell', 'shell': 'shell', 'zsh': 'shell',
               'dart': 'dart',
               'scala': 'scala'
             };
@@ -140,9 +145,11 @@ const NewReview = () => {
               setLanguage(standardLang);
             }
           }
-        } catch (e) { }
+        } catch (e) {
+          console.error('[DETECTION_ERROR]', e);
+        }
       }
-    }, 500);
+    }, 800);
     return () => clearTimeout(timer);
   }, [codeSnippet, language, isManualOverride]);
 
@@ -489,30 +496,11 @@ const NewReview = () => {
         </div>
 
         {/* AI Summary Banner */}
-        {summary && (
-          <div className="bg-purple-500/10 border-b border-purple-500/20 p-6 animate-in slide-in-from-top-2 duration-300 shrink-0">
-             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-6 items-start">
-                <div className="h-10 w-10 bg-purple-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/30">
-                  <FileCode className="h-5 w-5 text-white" />
-                </div>
-                <div className="flex-1">
-                   <h4 className="text-sm font-black text-purple-600 uppercase tracking-widest mb-2 flex items-center gap-2">
-                     Snippet Logic Overview
-                     <button onClick={() => setSummary('')} className="ml-auto text-sec hover:text-main text-xs normal-case font-bold">Dismiss</button>
-                   </h4>
-                   <div className="text-sm text-main font-medium leading-relaxed ai-feedback-content">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{summary}</ReactMarkdown>
-                   </div>
-                </div>
-             </div>
-          </div>
-        )}
-
         {/* Content Area - Clean Sovereign Dual Pane */}
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
           {/* Editor Pane */}
           <div className={`flex-1 flex flex-col min-w-0 ${(result || loading || error) ? 'lg:w-1/2' : 'w-full'} transition-all duration-500 relative bg-main`}>
-            <div className="bg-sec/30 border-b border-col/20 px-4 py-2 flex justify-between items-center shrink-0">
+            <div className="h-10 bg-sec/30 border-b border-col/20 px-4 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-2">
                 <Code className="h-3.5 w-3.5 text-primary-500" />
                 <span className="text-[10px] font-bold uppercase tracking-widest text-sec">Technical Editor</span>
@@ -546,13 +534,13 @@ const NewReview = () => {
             </div>
           </div>
 
-          {(result || loading || error) && (
+          {(result || loading || error || summary) && (
             <div className="hidden lg:block w-[1px] bg-col/30 shrink-0"></div>
           )}
 
           {/* Results Pane */}
           <AnimatePresence>
-            {(result || error || loading) && (
+            {(result || error || loading || summary) && (
               <motion.div 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -560,20 +548,55 @@ const NewReview = () => {
                 transition={{ duration: 0.4 }}
                 className="flex-1 flex flex-col lg:w-1/2 bg-ter/5 overflow-hidden relative"
               >
-                <div className="bg-sec/30 border-b border-col/20 px-4 py-2 flex justify-between items-center shrink-0">
+                <div className="h-10 bg-sec/30 border-b border-col/20 px-4 flex justify-between items-center shrink-0">
                   <div className="flex items-center gap-2">
                     <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
                     <span className="text-[10px] font-bold uppercase tracking-widest text-sec">Audit Output</span>
                   </div>
-                  {result && (
-                    <div className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase flex items-center gap-1.5 border ${result.bugsFound > 0 ? 'bg-red-500/10 text-red-600 border-red-500/20' : 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'}`}>
-                      {result.bugsFound > 0 ? <AlertTriangle className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
-                      {result.bugsFound > 0 ? `${result.bugsFound} Issues` : 'Integrated'}
+                  {(result || summary) && (
+                    <div className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase flex items-center gap-1.5 border ${(result?.bugsFound > 0) ? 'bg-red-500/10 text-red-600 border-red-500/20' : 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'}`}>
+                      {(result?.bugsFound > 0) ? <AlertTriangle className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+                      {(result?.bugsFound > 0) ? `${result.bugsFound} Issues` : 'Integrated'}
                     </div>
                   )}
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 custom-scrollbar relative pb-12">
+                  {/* Executive Overview Section */}
+                  <AnimatePresence>
+                    {summary && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-8 p-6 glass-panel bg-primary-500/5 border-primary-500/10 relative overflow-hidden"
+                      >
+                        <div className="absolute top-0 left-0 w-1 h-full bg-primary-500/50"></div>
+                        <div className="flex items-center justify-between mb-4">
+                           <div className="flex items-center gap-2">
+                             <AlignLeft className="h-3.5 w-3.5 text-primary-500" />
+                             <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary-500">Executive Briefing</span>
+                           </div>
+                           <button onClick={() => setSummary('')} className="text-[9px] font-bold text-sec hover:text-main uppercase">Dismiss</button>
+                        </div>
+                        <div className="space-y-4">
+                          {summary.split('**').filter(s => s.trim()).map((part, idx) => {
+                             if (idx % 2 === 0) {
+                               const title = part.replace('[', '').replace(']', '').replace(':', '').trim();
+                               const content = summary.split('**')[idx + 2] || '';
+                               if (!title) return null;
+                               return (
+                                 <div key={idx} className="flex flex-col gap-1">
+                                    <span className="text-[8px] font-black uppercase tracking-widest text-sec/40">{title}</span>
+                                    <p className="text-xs font-bold text-main leading-relaxed">{content.replace(':', '').trim().split('\n')[0]}</p>
+                                 </div>
+                               );
+                             }
+                             return null;
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                   {loading && (
                     <div className="flex flex-col items-center justify-center h-full text-sec gap-4">
                       <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
@@ -592,14 +615,74 @@ const NewReview = () => {
                   )}
 
                   {result && (
-                    <div className="ai-feedback-content animate-in fade-in duration-500">
+                    <div className="ai-feedback-content animate-in fade-in duration-500 pb-12">
+                      {/* Metric Dashboard */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                         {(() => {
+                            const scores = [];
+                            const scorecardMatch = result.aiFeedback.match(/## Analysis Scorecard\n([\s\S]*?)\n\n/);
+                            if (scorecardMatch) {
+                               const rows = scorecardMatch[1].split('\n').slice(2);
+                               rows.forEach(row => {
+                                  const parts = row.split('|').map(p => p.trim()).filter(Boolean);
+                                  if (parts.length >= 3) {
+                                     scores.push({
+                                        label: parts[0],
+                                        score: parts[1],
+                                        impact: parts[2]
+                                     });
+                                  }
+                               });
+                            }
+                            return scores.length > 0 ? scores.map((s, i) => (
+                               <div key={i} className="bg-sec/20 border border-col/30 rounded-2xl p-5 flex flex-col items-center text-center group hover:border-primary-500/30 transition-all">
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-sec/40 mb-3">{s.label}</span>
+                                  <div className="text-3xl font-black text-main mb-1 group-hover:text-primary-500 transition-colors">{s.score}</div>
+                                  <div className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                                     s.impact.toLowerCase().includes('critical') || s.impact.toLowerCase().includes('high') 
+                                     ? 'bg-red-500/10 text-red-500 border-red-500/20' 
+                                     : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                  }`}>
+                                     {s.impact} IMPACT
+                                  </div>
+                               </div>
+                            )) : null;
+                         })()}
+                      </div>
+
+                      {/* Global Rating Hero */}
+                      <div className="mb-12 flex flex-col items-center">
+                         <div className="h-[2px] w-12 bg-primary-500 mb-6 rounded-full opacity-30"></div>
+                         <div className="text-[10px] font-black uppercase tracking-[0.4em] text-sec/40 mb-2 font-mono">INTELLIGENCE RATING</div>
+                         {(() => {
+                            const ratingMatch = result.aiFeedback.match(/### GLOBAL RATING:\s*(\d+)/i);
+                            return (
+                               <div className="text-7xl font-black text-main tracking-tighter shadow-primary-500/10 drop-shadow-2xl">
+                                  {ratingMatch ? ratingMatch[1] : '8'}<span className="text-3xl text-sec/20">/10</span>
+                               </div>
+                            );
+                         })()}
+                      </div>
+
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
                           h1: ({ children }) => <h1 className="text-lg font-bold text-main mb-6 border-b border-col/30 pb-3">{children}</h1>,
-                          h2: ({ children }) => <h2 className="text-sm font-bold text-primary-500 uppercase tracking-widest mt-8 mb-3 flex items-center gap-2"><div className="h-1 w-1 bg-primary-500"></div>{children}</h2>,
+                          h2: ({ children }) => {
+                             const text = children?.toString() || '';
+                             if (text.includes('Analysis Scorecard') || text.includes('Technical Findings')) return null;
+                             return <h2 className="text-sm font-bold text-primary-500 uppercase tracking-widest mt-8 mb-3 flex items-center gap-2"><div className="h-1 w-1 bg-primary-500"></div>{children}</h2>;
+                          },
                           p: ({ children }) => <p className="text-[13px] leading-relaxed text-sec mb-4">{children}</p>,
                           li: ({ children }) => <li className="text-[13px] leading-relaxed text-sec mb-2 pl-3 border-l-2 border-ter">{children}</li>,
+                          table: ({ children }) => {
+                            return <div className="my-8 rounded-2xl border border-col/30 bg-sec/10 overflow-hidden">{children}</div>;
+                          },
+                          thead: ({ children }) => <thead className="bg-ter/30 border-b border-col/30 text-[9px] font-black uppercase tracking-widest text-sec">{children}</thead>,
+                          tbody: ({ children }) => <tbody className="text-xs font-bold text-main">{children}</tbody>,
+                          tr: ({ children }) => <tr className="border-b border-col/10 last:border-0 hover:bg-ter/10 transition-colors">{children}</tr>,
+                          td: ({ children }) => <td className="p-4 leading-relaxed">{children}</td>,
+                          th: ({ children }) => <th className="p-4 text-left font-black">{children}</th>,
                           code({ node, inline, className, children, ...props }) {
                             const match = /language-(\w+)/.exec(className || '');
                             return !inline && match ? (

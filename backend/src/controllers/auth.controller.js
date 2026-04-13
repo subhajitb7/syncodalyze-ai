@@ -3,6 +3,7 @@ import User from '../models/User.model.js';
 import generateToken from '../utils/generateToken.js';
 import { sendOtpEmail } from '../utils/sendEmail.js';
 import AuditLog from '../models/AuditLog.model.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -158,6 +159,11 @@ export const verifyOtp = async (req, res) => {
     
     await user.save();
 
+    // Log Successful Login
+    await logActivity('LOGIN_SUCCESS', user._id, `Authenticated via 2FA node: ${email}`, {
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
+
     generateToken(res, user._id);
 
     return res.status(200).json({
@@ -287,6 +293,11 @@ export const upgradePassword = async (req, res) => {
     user.mustUpdatePassword = false;
     await user.save();
 
+    // Log Credential Rotation (Upgrade)
+    await logActivity('CREDENTIALS_ROTATED', req.user._id, `Legacy password upgraded to high-security standard`, {
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
+
     res.json({
       _id: user._id,
       name: user.name,
@@ -352,6 +363,11 @@ export const resetPassword = async (req, res) => {
     user.otp = undefined;
     user.otpExpiry = undefined;
     await user.save();
+
+    // Log Credential Rotation (Reset)
+    await logActivity('CREDENTIALS_ROTATED', user._id, `Password reset successfully via verification cipher`, {
+      ipAddress: req.ip || req.connection.remoteAddress
+    });
 
     res.json({ message: 'Password reset successful. You can now sign in.' });
   } catch (error) {

@@ -19,6 +19,7 @@ import ailogRoutes from './routes/ailog.routes.js';
 import teamRoutes from './routes/team.routes.js';
 import aiRoutes from './routes/ai.routes.js';
 import messageRoutes from './routes/message.routes.js';
+import activityRoutes from './routes/activity.routes.js';
 
 dotenv.config();
 
@@ -126,6 +127,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/ai-logs', ailogRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/activity', activityRoutes);
 
 app.get('/', (req, res) => {
   res.send('Syncodalyze AI Platform API is running...');

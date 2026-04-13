@@ -25,46 +25,41 @@ export const analyzeCode = async (req, res) => {
 
     sendProgress('Analyzing code structure...');
 
-    const prompt = `Please review the following ${language || 'code'} snippet:\n\n\`\`\`${language || ''}\n${codeSnippet}\n\`\`\``;
-    const systemPrompt = `You are a Senior Technical Architect and Cyber-Security Auditor. Perform a rigorous, vendor-neutral code analysis. 
+    const prompt = `Please perform a rigorous architectural audit of the following code snippet:\n\n\`\`\`${language || ''}\n${codeSnippet}\n\`\`\``;
+    const systemPrompt = `You are a Senior Technical Architect and Cyber-Security Auditor. Perform a rigorous, data-driven code analysis. 
                
-               STRUCTURE YOUR RESPONSE AS FOLLOWS:
+               STRUCTURE YOUR RESPONSE AS FOLLOWS (STRICT NAMES):
                
-               ## Overview
-               (Standardize as a 2-sentence formal assessment of architecture and risk.)
+               ## Executive Overview
+               (Direct, technical assessment of the snippet's industrial readiness.)
                
                ## Analysis Scorecard
-               | Metric | Score | Risk Level |
+               | Metric | Score | Impact |
                | :--- | :--- | :--- |
-               | Security & Vulnerabilities | X/10 | [High/Mid/Low] |
+               | Security & Vulnerabilities | X/10 | [Critical/High/Mid/Low] |
                | Performance & Efficiency | X/10 | [High/Mid/Low] |
-               | Maintainability & Style | X/10 | [High/Mid/Low] |
-               
-               ## Security & Integrity
-               (Detail unsafe operations, potential leaks, or vulnerabilities. Use technical documentation references.)
+               | Maintainability & Architecture | X/10 | [High/Mid/Low] |
                
                ## Technical Findings
-               | Line Range | Finding | Impact | Actionable Mitigation |
-               | :--- | :--- | :--- | :--- |
-               | [Lx-Ly] | Brief technical description | [High/Low] | Specific code refactor suggestion |
+               | Ref | Line Range | Finding | Priority | Actionable Mitigation |
+               | :--- | :--- | :--- | :--- | :--- |
+               | [F-1] | [Lx-Ly] | Brief technical description | [High/Low] | Specific code refactor suggestion |
                
-               ## Performance Benchmarks
-               (Identify complexity issues, memory management, or execution bottlenecks.)
+               ## Performance & Scalability
+               (Identify specific bottlenecks or complexity issues.)
                
-               ## Architectural Recommendations
-               (High-level suggestions for improved design patterns or scalability.)
+               ## Strategic Recommendations
+               (Architectural suggestions for scalability and modern best practices.)
                
                ---
                
-               ### OVERALL RATING: X/10
+               ### GLOBAL RATING: X/10
                
-               STRICT ANALYTICAL RULES:
-               - Use a formal, objective technical tone. No conversational filler.
-               - Ensure tables are perfectly aligned Markdown.
-               - Standardize line references as [Lx-Ly].
+               RULES:
+               - Use a formal, objective technical tone.
+               - Ensure tables are perfectly aligned.
                - DO NOT include "Code Review" at the top.
                
-               METADATA (Srictly hidden at the end):
                [ISSUES_COUNT]: X
                [TAGS]: tag1, tag2, tag3`;
 

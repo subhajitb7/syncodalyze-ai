@@ -71,8 +71,19 @@ export const summarizeSnippet = async (req, res) => {
   try {
     const settings = await getSettings();
 
-    const prompt = `Summarize the logic and purpose of the following code in exactly 3 concise bullet points. Be technical but understandable.\n\nTitle: ${title || 'Snippet'}\nCode:\n\`\`\`${language || ''}\n${codeSnippet}\n\`\`\``;
-    const systemPrompt = 'You are an elite Technical Architect. Summarize code logic with extreme precision and technical density. No conversational filler.';
+    const prompt = `Perform an elite technical summary of the following code snippet. 
+    
+    STRUCTURE YOUR RESPONSE AS FOLLOWS:
+    **[PURPOSE]**: (1-sentence describing the technical objective)
+    **[LOGIC]**: (Describe the core execution flow and key algorithms)
+    **[RISK]**: (Identify potential bottlenecks or technical debt in 1 sentence)
+
+    Title: ${title || 'Snippet'}
+    Code:
+    \`\`\`${language || ''}
+    ${codeSnippet}
+    \`\`\``;
+    const systemPrompt = 'You are an elite Technical Architect. Provide high-precision, technically dense summaries. No conversational filler.';
     
     const { content: summary } = await callGroq(
       systemPrompt, 
