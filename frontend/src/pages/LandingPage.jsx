@@ -162,7 +162,7 @@ const LandingPage = () => {
                      </div>
                      <div>
                         <p className="text-[10px] font-black text-sec uppercase tracking-[0.3em] mb-1 opacity-50">Target Analysis</p>
-                        <p className="text-xs font-bold text-main tracking-tight">Logic_Validator_v4.py</p>
+                        <p className="text-xs font-bold text-main tracking-tight">Logic_Validator_v4.js</p>
                      </div>
                   </div>
                   <div className="flex gap-4">
